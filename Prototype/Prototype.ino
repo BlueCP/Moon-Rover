@@ -23,7 +23,7 @@ StaticJsonDocument<128> SensorData; // Seensor data to be transmitted 128 bytes 
 const float TURNING_FACTOR = 0.5; // Number between 0 and 1 to control maximum sharpness of turns
 const float RESPONSE_SPEED = 0.1; // Controls how quickly a wheel reaches the target velocity
 const float SWEEP_PERIOD = 3000; // Period of sweeping cycle in ms
-const int SWEEP_WIDTH = 0x20; // How wide the sweep range should be
+const int SWEEP_WIDTH = 0xb0; // How wide the sweep range should be
 
 // General useful values
 unsigned long prevTime = 0;
@@ -113,12 +113,10 @@ void setup() {
   pinMode(interruptPin, INPUT_PULLDOWN);
   
   // Motors
-  pinMode(2, OUTPUT); // Left PWM
-  pinMode(3, OUTPUT); // Left DIR
-  pinMode(4, OUTPUT); // Left Vin
+  pinMode(3, OUTPUT); // Left PWM
+  pinMode(4, OUTPUT); // Left DIR
   pinMode(5, OUTPUT); // Right PWM
   pinMode(6, OUTPUT); // Right DIR
-  pinMode(7, OUTPUT); // Right Vin
 
   // Error out if no WiFi Shield
   if (WiFi.status() == WL_NO_SHIELD){
@@ -198,33 +196,21 @@ void loop() {
   Serial.print("\t");
   Serial.print(rightWheelVelocity);
 
-  // PWM outputs
-  if (leftWheelVelocity == 0) {
-    analogWrite(2, 0);
-  } else {
-    analogWrite(2, 0xff);
-  }
-  if (rightWheelVelocity == 0) {
-    analogWrite(5, 0);
-  } else {
-    analogWrite(5, 0xff);
-  }
-
   // DIR outputs
-  if (leftWheelVelocity > 0) {
-    analogWrite(3, 0);
+  if (leftWheelVelocity >= 0) {
+    digitalWrite(4, LOW);
   } else {
-    analogWrite(3, 0xff);
+    digitalWrite(4, HIGH);
   }
-  if (rightWheelVelocity > 0) {
-    analogWrite(6, 0);
+  if (rightWheelVelocity >= 0) {
+    digitalWrite(6, LOW);
   } else {
-    analogWrite(6, 0xff);
+    digitalWrite(6, HIGH);
   }
 
   // Vin outputs
-  analogWrite(4, abs(leftWheelVelocity));
-  analogWrite(7, abs(rightWheelVelocity));
+  analogWrite(3, abs(leftWheelVelocity));
+  analogWrite(5, abs(rightWheelVelocity));
 
   Serial.println(""); // Terminate serial printing
 }
