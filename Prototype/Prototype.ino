@@ -16,7 +16,7 @@ WiFiUDP Udp;
 // Signal detection variables
 long signalTime; //Stores time since last pulse
 double freq; //calculated from signalTime
-const byte interruptPin = 2; // Pin that will detect the pulses
+const byte interruptPin = 7; // Pin that will detect the pulses
 StaticJsonDocument<128> SensorData; // Seensor data to be transmitted 128 bytes large
 
 // Steering/movement constants
@@ -250,16 +250,21 @@ void CaptureSensorData(){
     attachInterrupt(digitalPinToInterrupt(interruptPin),count,RISING);
     delay(100);
     detachInterrupt(digitalPinToInterrupt(interruptPin));
+    SensorData["radio"] = freq;
+    // attachInterrupt(digitalPinToInterrupt(infraredPin),count,RISING);
+    // delay(100);
+    // detachInterrupt(digitalPinToInterrupt(infraredPin));
+    SensorData["infrared"] = freq;
+    // attachInterrupt(digitalPinToInterrupt(accousticPin),count,RISING);
+    // delay(100);
+    // detachInterrupt(digitalPinToInterrupt(accousticPin));
+    SensorData["accoustic"] = freq;
 }
 
 void SendSensorData(){
-    SensorData["radio"] = freq;
-    SensorData["infrared"] = 0;
-    SensorData["magnetic"] = 0;
 
     // Debug
     //serializeJson(SensorData,Serial);
-    
     Udp.beginPacket(Udp.remoteIP(), Udp.remotePort());
     serializeJson(SensorData,Udp);
     Udp.endPacket();
