@@ -16,7 +16,7 @@ WiFiUDP Udp;
 // Signal detection variables
 long signalTime; //Stores time since last pulse
 double freq; //calculated from signalTime
-const byte interruptPin = 7; // Pin that will detect the pulses
+const byte interruptPin = 9; // Pin that will detect the pulses
 StaticJsonDocument<128> SensorData; // Seensor data to be transmitted 128 bytes large
 
 // Steering/movement constants
