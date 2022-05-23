@@ -1,3 +1,24 @@
+#include <Adafruit_NeoPixel.h>
+#include <ArduinoJson.h>
+#include "WiFi_Secret.h"
+#include <SPI.h>
+#include <WiFi101.h>
+#include <WiFiUdp.h>
+
+// Wireless variables
+int status = WL_IDLE_STATUS;
+char ssid[] = SECRET_SSID;
+char pass[] = SECRET_PASS;
+unsigned int localPort = 2390;
+char packetBuffer[255];
+WiFiUDP Udp;
+
+// Signal detection variables
+long signalTime; //Stores time since last pulse
+double freq; //calculated from signalTime
+const byte interruptPin = 2; // Pin that will detect the pulses
+StaticJsonDocument<128> SensorData; // Seensor data to be transmitted 128 bytes large
+
 // Steering/movement constants
 const float TURNING_FACTOR = 0.5; // Number between 0 and 1 to control maximum sharpness of turns
 const float RESPONSE_SPEED = 0.1; // Controls how quickly a wheel reaches the target velocity
@@ -14,6 +35,14 @@ int leftWheelVelocity = 0;
 int rightWheelVelocity = 0;
 int sweepTime = 0;
 bool sweeping = false;
+bool Controls[8]; // Control layout [T,R,B,L,F,S,X,X]
+/* 
+  X - Unused
+  S - Sweep
+  T - Test sample
+  F, L, B, R - Direction
+*/
+
 
 // For debugging
 int pos = 0;
@@ -79,6 +108,9 @@ void right_velocity() {
 void setup() {
   // Initialise serial output
   Serial.begin(9600);
+
+  // Sensor
+  pinMode(interruptPin, INPUT_PULLDOWN);
   
   // Motors
   pinMode(2, OUTPUT); // Left PWM
@@ -87,6 +119,21 @@ void setup() {
   pinMode(5, OUTPUT); // Right PWM
   pinMode(6, OUTPUT); // Right DIR
   pinMode(7, OUTPUT); // Right Vin
+
+  // Error out if no WiFi Shield
+  if (WiFi.status() == WL_NO_SHIELD){
+    Serial.println("WiFi shield not present");;
+    while (true){}
+  }
+  while ( status != WL_CONNECTED) {
+    Serial.print("Attempting to connect to SSID: ");
+    Serial.println(ssid);
+    status = WiFi.begin(ssid, pass);
+    delay(10000);
+  }
+  Serial.println("Connected to wifi");
+  printWiFiStatus();
+  Udp.begin(localPort); 
 }
 
 void loop() {
@@ -95,21 +142,46 @@ void loop() {
   prevTime = millis();
 
   // Input detection - temporary
-  if (Serial.available() > 0) {
-    char inputByte = Serial.read();
-    if (inputByte == '1' || inputByte == '0') {
-      inputString[pos] = inputByte;
-      pos++;
+  // if (Serial.available() > 0) {
+  //   char inputByte = Serial.read();
+  //   if (inputByte == '1' || inputByte == '0') {
+  //     inputString[pos] = inputByte;
+  //     pos++;
+  //   }
+  //   if (pos == 5) {
+  //     pos = 0;
+  //     F = inputString[0] == '1' ? true : false;
+  //     B = inputString[1] == '1' ? true : false;
+  //     L = inputString[2] == '1' ? true : false;
+  //     R = inputString[3] == '1' ? true : false;
+  //     sweeping = inputString[4] == '1' ? true : false;
+  //   } else {
+  //     return;
+  //   }
+  // }
+
+  // Udp inputs
+  int packetSize = Udp.parsePacket();
+  if(packetSize){
+    // Read incoming control packet into buffer.
+    int len = Udp.read(packetBuffer, 255);
+    if(len > 0){
+      packetBuffer[len] = 0;
     }
-    if (pos == 5) {
-      pos = 0;
-      F = inputString[0] == '1' ? true : false;
-      B = inputString[1] == '1' ? true : false;
-      L = inputString[2] == '1' ? true : false;
-      R = inputString[3] == '1' ? true : false;
-      sweeping = inputString[4] == '1' ? true : false;
-    } else {
-      return;
+    // Convert single byte into an array of 8 bools
+    for (int i=0; i < 8; ++i){
+        Controls[i] = (packetBuffer[0] & (1<<i)) != 0;
+    }
+    if(Controls[0]){
+      CaptureSensorData();
+      SendSensorData();
+    }
+    else{
+      sweeping = Controls[5];
+      F = Controls[4];
+      L = Controls[3];
+      B = Controls[2];
+      R = Controls[1];
     }
   }
 
@@ -155,4 +227,46 @@ void loop() {
   analogWrite(7, abs(rightWheelVelocity));
 
   Serial.println(""); // Terminate serial printing
+}
+
+void printWiFiStatus() {
+  // print the SSID of the network you're attached to:
+    Serial.print("SSID: ");
+    Serial.println(WiFi.SSID());
+
+  // print your WiFi shield's IP address:
+    IPAddress ip = WiFi.localIP();
+    Serial.print("IP Address: ");
+    Serial.println(ip);
+
+  // print the received signal strength:
+    long rssi = WiFi.RSSI();
+    Serial.print("signal strength (RSSI):");
+    Serial.print(rssi);
+    Serial.println(" dBm");
+}
+
+void CaptureSensorData(){
+    attachInterrupt(digitalPinToInterrupt(interruptPin),count,RISING);
+    delay(100);
+    detachInterrupt(digitalPinToInterrupt(interruptPin));
+}
+
+void SendSensorData(){
+    SensorData["radio"] = freq;
+    SensorData["infrared"] = 0;
+    SensorData["magnetic"] = 0;
+
+    // Debug
+    //serializeJson(SensorData,Serial);
+    
+    Udp.beginPacket(Udp.remoteIP(), Udp.remotePort());
+    serializeJson(SensorData,Udp);
+    Udp.endPacket();
+}
+
+void count(){
+    long d = micros()-signalTime;
+    freq = 1.0/(d) * 1000000;
+    signalTime = micros();
 }
