@@ -113,10 +113,10 @@ void setup() {
   pinMode(interruptPin, INPUT_PULLDOWN);
   
   // Motors
-  pinMode(3, OUTPUT); // Left PWM
+  pinMode(5, OUTPUT); // Left PWM
   pinMode(4, OUTPUT); // Left DIR
-  pinMode(5, OUTPUT); // Right PWM
-  pinMode(6, OUTPUT); // Right DIR
+  pinMode(3, OUTPUT); // Right PWM
+  pinMode(2, OUTPUT); // Right DIR
 
   // Error out if no WiFi Shield
   if (WiFi.status() == WL_NO_SHIELD){
@@ -192,12 +192,12 @@ void loop() {
   }  
 
   // PWM outputs
-  analogWrite(3, abs(leftWheelVelocity));
-  analogWrite(5, abs(rightWheelVelocity));
+  analogWrite(5, abs(leftWheelVelocity));
+  analogWrite(3, abs(rightWheelVelocity));
 
   // DIR outputs
   digitalWrite(4, leftWheelVelocity >= 0 ? LOW : HIGH);
-  digitalWrite(6, rightWheelVelocity >= 0 ? LOW : HIGH);
+  digitalWrite(2, rightWheelVelocity >= 0 ? LOW : HIGH);
 }
 
 void printWiFiStatus() {
