@@ -191,28 +191,13 @@ void loop() {
     right_velocity();
   }  
 
-  // Debug
-  Serial.print(leftWheelVelocity);
-  Serial.print("\t");
-  Serial.print(rightWheelVelocity);
-
-  // DIR outputs
-  if (leftWheelVelocity >= 0) {
-    digitalWrite(4, LOW);
-  } else {
-    digitalWrite(4, HIGH);
-  }
-  if (rightWheelVelocity >= 0) {
-    digitalWrite(6, LOW);
-  } else {
-    digitalWrite(6, HIGH);
-  }
-
-  // Vin outputs
+  // PWM outputs
   analogWrite(3, abs(leftWheelVelocity));
   analogWrite(5, abs(rightWheelVelocity));
 
-  Serial.println(""); // Terminate serial printing
+  // DIR outputs
+  digitalWrite(4, leftWheelVelocity >= 0 ? LOW : HIGH);
+  digitalWrite(6, rightWheelVelocity >= 0 ? LOW : HIGH);
 }
 
 void printWiFiStatus() {
