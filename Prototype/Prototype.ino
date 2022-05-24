@@ -232,8 +232,6 @@ void CaptureSensorData(){
 
 void SendSensorData(){
 
-    // Debug
-    serializeJson(SensorData,Serial);
     Udp.beginPacket(Udp.remoteIP(), Udp.remotePort());
     serializeJson(SensorData,Udp);
     Udp.endPacket();
