@@ -1,0 +1,49 @@
+ControlInterface:
+
+<ControlInterface>:
+    orientation: "vertical"
+    Label:
+        text: "network connection stats blah blah select network? "
+    BoxLayout:
+        orientation: "horizontal"
+        size_hint: 1, 5
+        BoxLayout:
+            orientation: "vertical"
+            Button:
+                on_press: root.move_forward()
+                on_release: root.forward_release()
+                background_color: 0, 0.6, 1, 1
+                Image:
+                    source: "arrowup.png"
+                    size: 100, 100
+                    center_x: self.parent.x + (self.parent.width)/2
+                    center_y: self.parent.y + (self.parent.height)/2
+            Button:
+                on_press: root.move_backward()
+                on_release: root.backward_release()
+                background_color: 0, 0.6, 1, 1
+                Image:
+                    source: "arrowdown.png"
+                    size: 100, 100
+                    center_x: self.parent.x + (self.parent.width)/2
+                    center_y: self.parent.y + (self.parent.height)/2
+        BoxLayout:
+            orientation: "horizontal"
+            Button:
+                on_press: root.move_left()
+                on_release: root.left_release()
+                background_color: 0, 0.6, 1, 1
+                Image:
+                    source: "arrowleft.png"
+                    size: 100, 100
+                    center_x: self.parent.x + (self.parent.width)/2
+                    center_y: self.parent.y + (self.parent.height)/2
+            Button:
+                on_press: root.move_right()
+                on_release: root.right_release()
+                background_color: 0, 0.6, 1, 1
+                Image:
+                    source: "arrowright.png"
+                    size: 100, 100
+                    center_x: self.parent.x + (self.parent.width)/2
+                    center_y: self.parent.y + (self.parent.height)/2
