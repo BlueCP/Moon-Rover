@@ -113,18 +113,9 @@ void setup() {
   pinMode(6, OUTPUT); // Right PWM
   pinMode(3, OUTPUT); // Right DIR
 
-  //Waiting for serial
-  while(!Serial){
-    pixels.setPixelColor(0,pixels.Color(12,247,247));
-    pixels.show();
-    delay(500);
-    pixels.setPixelColor(0,pixels.Color(247,12,247));
-    pixels.show();
-    delay(500);
-  }
   // Error out if no WiFi Shield
   if (WiFi.status() == WL_NO_SHIELD){
-    Serial.println("WiFi module not present");;
+    Serial.println("WiFi module not present");
     while (true){
       pixels.setPixelColor(0,pixels.Color(255,0,0));
       pixels.show();
@@ -165,6 +156,9 @@ void loop() {
     if(len > 0){
       packetBuffer[len] = 0;
     }
+    Udp.beginPacket(Udp.remoteIP(),Udp.remotePort());
+    Udp.write("ACK");
+    Udp.endPacket();
     if(packetBuffer[0] == 'Z' && packetBuffer[1] == 'D' && packetBuffer[2] == 'B'){
       if(packetBuffer[3]=='1'){
       CaptureSensorData();
@@ -178,7 +172,6 @@ void loop() {
         R = packetBuffer[7] == '1';
       }
     }
-    
   }
 
   if (sweeping) { // Note that sweeping overrides all other inputs
