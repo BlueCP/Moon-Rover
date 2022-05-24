@@ -173,8 +173,8 @@ void loop() {
       else{
         sweeping = packetBuffer[4] == '1';
         F = packetBuffer[5] == '1';
-        L = packetBuffer[6] == '1';
-        B = packetBuffer[7] == '1';
+        B = packetBuffer[6] == '1';
+        L = packetBuffer[7] == '1';
         R = packetBuffer[8] == '1';
       }
     }
