@@ -187,26 +187,15 @@ void loop() {
     sweepTime = 0;
     left_velocity();
     right_velocity();
-    Serial.println("AAAH");
   }  
 
   // PWM outputs
-<<<<<<< HEAD
   analogWrite(9, abs(leftWheelVelocity));
   analogWrite(6, abs(rightWheelVelocity));
 
   // DIR outputs
   digitalWrite(8, leftWheelVelocity >= 0 ? LOW : HIGH);
   digitalWrite(3, rightWheelVelocity >= 0 ? LOW : HIGH);
-=======
-  analogWrite(5, abs(leftWheelVelocity));
-  analogWrite(4, abs(rightWheelVelocity));
-
-  // DIR outputs
-  digitalWrite(4, leftWheelVelocity >= 0 ? LOW : HIGH);
-  digitalWrite(2, rightWheelVelocity >= 0 ? LOW : HIGH);
-
->>>>>>> 3e43953 (Updated control decoding scheme)
 }
 
 void printWiFiStatus() {
