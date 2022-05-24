@@ -36,14 +36,6 @@ int leftWheelVelocity = 0;
 int rightWheelVelocity = 0;
 int sweepTime = 0;
 bool sweeping = false;
-bool Controls[8]; // Control layout [T,R,B,L,F,S,X,X]
-/* 
-  X - Unused
-  S - Sweep
-  T - Test sample
-  F, L, B, R - Direction
-*/
-
 
 // For debugging
 int pos = 0;
@@ -132,7 +124,7 @@ void setup() {
   }
   // Error out if no WiFi Shield
   if (WiFi.status() == WL_NO_SHIELD){
-    Serial.println("WiFi shield not present");;
+    Serial.println("WiFi module not present");;
     while (true){
       pixels.setPixelColor(0,pixels.Color(255,0,0));
       pixels.show();
@@ -165,27 +157,7 @@ void loop() {
   // Update delta
   delta = millis() - prevTime;
   prevTime = millis();
-
-  // Input detection - temporary
-  // if (Serial.available() > 0) {
-  //   char inputByte = Serial.read();
-  //   if (inputByte == '1' || inputByte == '0') {
-  //     inputString[pos] = inputByte;
-  //     pos++;
-  //   }
-  //   if (pos == 5) {
-  //     pos = 0;
-  //     F = inputString[0] == '1' ? true : false;
-  //     B = inputString[1] == '1' ? true : false;
-  //     L = inputString[2] == '1' ? true : false;
-  //     R = inputString[3] == '1' ? true : false;
-  //     sweeping = inputString[4] == '1' ? true : false;
-  //   } else {
-  //     return;
-  //   }
-  // }
-
-  // Udp inputs
+  //Udp inputs
   int packetSize = Udp.parsePacket();
   if(packetSize){
     // Read incoming control packet into buffer.
@@ -193,21 +165,20 @@ void loop() {
     if(len > 0){
       packetBuffer[len] = 0;
     }
-    // Convert single byte into an array of 8 bools
-    for (int i=0; i < 8; ++i){
-        Controls[i] = (packetBuffer[0] & (1<<i)) != 0;
-    }
-    if(Controls[0]){
+    if(packetBuffer[0] == 'Z' && packetBuffer[1] == 'D' && packetBuffer[2] == 'B'){
+      if(packetBuffer[3]=='1'){
       CaptureSensorData();
       SendSensorData();
+      }
+      else{
+        sweeping = packetBuffer[4] == '1';
+        F = packetBuffer[5] == '1';
+        L = packetBuffer[6] == '1';
+        B = packetBuffer[7] == '1';
+        R = packetBuffer[8] == '1';
+      }
     }
-    else{
-      sweeping = Controls[5];
-      F = Controls[4];
-      L = Controls[3];
-      B = Controls[2];
-      R = Controls[1];
-    }
+    
   }
 
   if (sweeping) { // Note that sweeping overrides all other inputs
@@ -216,15 +187,26 @@ void loop() {
     sweepTime = 0;
     left_velocity();
     right_velocity();
+    Serial.println("AAAH");
   }  
 
   // PWM outputs
+<<<<<<< HEAD
   analogWrite(9, abs(leftWheelVelocity));
   analogWrite(6, abs(rightWheelVelocity));
 
   // DIR outputs
   digitalWrite(8, leftWheelVelocity >= 0 ? LOW : HIGH);
   digitalWrite(3, rightWheelVelocity >= 0 ? LOW : HIGH);
+=======
+  analogWrite(5, abs(leftWheelVelocity));
+  analogWrite(4, abs(rightWheelVelocity));
+
+  // DIR outputs
+  digitalWrite(4, leftWheelVelocity >= 0 ? LOW : HIGH);
+  digitalWrite(2, rightWheelVelocity >= 0 ? LOW : HIGH);
+
+>>>>>>> 3e43953 (Updated control decoding scheme)
 }
 
 void printWiFiStatus() {
