@@ -116,10 +116,10 @@ void setup() {
   pinMode(interruptPin, INPUT_PULLDOWN);
   
   // Motors
-  pinMode(5, OUTPUT); // Left PWM
-  pinMode(4, OUTPUT); // Left DIR
-  pinMode(3, OUTPUT); // Right PWM
-  pinMode(2, OUTPUT); // Right DIR
+  pinMode(9, OUTPUT); // Left PWM
+  pinMode(8, OUTPUT); // Left DIR
+  pinMode(6, OUTPUT); // Right PWM
+  pinMode(3, OUTPUT); // Right DIR
 
   //Waiting for serial
   while(!Serial){
@@ -219,12 +219,12 @@ void loop() {
   }  
 
   // PWM outputs
-  analogWrite(5, abs(leftWheelVelocity));
-  analogWrite(3, abs(rightWheelVelocity));
+  analogWrite(9, abs(leftWheelVelocity));
+  analogWrite(6, abs(rightWheelVelocity));
 
   // DIR outputs
-  digitalWrite(4, leftWheelVelocity >= 0 ? LOW : HIGH);
-  digitalWrite(2, rightWheelVelocity >= 0 ? LOW : HIGH);
+  digitalWrite(8, leftWheelVelocity >= 0 ? LOW : HIGH);
+  digitalWrite(3, rightWheelVelocity >= 0 ? LOW : HIGH);
 }
 
 void printWiFiStatus() {
