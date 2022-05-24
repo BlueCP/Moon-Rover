@@ -28,6 +28,7 @@ const int SWEEP_WIDTH = 0xb0; // How wide the sweep range should be
 // General useful values
 unsigned long prevTime = 0;
 int delta = 0; // Time since last loop() call
+Adafruit_NeoPixel pixels(1, 40, NEO_GRB + NEO_KHZ800); //Enable built in NeoPixel
 
 // Wheel state
 bool F, B, L, R = false;
@@ -108,7 +109,9 @@ void right_velocity() {
 void setup() {
   // Initialise serial output
   Serial.begin(9600);
-
+  // Initialise NeoPixel
+  pixels.begin();
+  pixels.setBrightness(255);
   // Sensor
   pinMode(interruptPin, INPUT_PULLDOWN);
   
@@ -118,18 +121,42 @@ void setup() {
   pinMode(3, OUTPUT); // Right PWM
   pinMode(2, OUTPUT); // Right DIR
 
+  //Waiting for serial
+  while(!Serial){
+    pixels.setPixelColor(0,pixels.Color(12,247,247));
+    pixels.show();
+    delay(500);
+    pixels.setPixelColor(0,pixels.Color(247,12,247));
+    pixels.show();
+    delay(500);
+  }
   // Error out if no WiFi Shield
   if (WiFi.status() == WL_NO_SHIELD){
     Serial.println("WiFi shield not present");;
-    while (true){}
+    while (true){
+      pixels.setPixelColor(0,pixels.Color(255,0,0));
+      pixels.show();
+      while (true){
+        pixels.setBrightness(0);
+        pixels.show();
+        delay(500);
+        pixels.setBrightness(255);
+        pixels.show();
+        delay(500);
+      }
+    }
   }
   while ( status != WL_CONNECTED) {
     Serial.print("Attempting to connect to SSID: ");
     Serial.println(ssid);
+    pixels.setPixelColor(0,pixels.Color(0,0,255));
+    pixels.show();
     status = WiFi.begin(ssid, pass);
     delay(10000);
   }
   Serial.println("Connected to wifi");
+  pixels.setPixelColor(0,pixels.Color(0,255,0));
+  pixels.show();
   printWiFiStatus();
   Udp.begin(localPort); 
 }
@@ -235,7 +262,7 @@ void CaptureSensorData(){
 void SendSensorData(){
 
     // Debug
-    //serializeJson(SensorData,Serial);
+    serializeJson(SensorData,Serial);
     Udp.beginPacket(Udp.remoteIP(), Udp.remotePort());
     serializeJson(SensorData,Udp);
     Udp.endPacket();
