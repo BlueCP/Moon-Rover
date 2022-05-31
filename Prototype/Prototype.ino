@@ -14,9 +14,7 @@ char packetBuffer[255];
 WiFiUDP Udp;
 
 // Signal detection variables
-long signalTime; //Stores time since last pulse
-double freq; //calculated from signalTime
-const byte interruptPin = 9; // Pin that will detect the pulses
+const byte radioPin = A0; // Pin that will detect the radio signal
 StaticJsonDocument<128> SensorData; // Seensor data to be transmitted 128 bytes large
 
 // Steering/movement constants
@@ -105,7 +103,7 @@ void setup() {
   pixels.begin();
   pixels.setBrightness(255);
   // Sensor
-  pinMode(interruptPin, INPUT_PULLDOWN);
+  pinMode(radioPin, INPUT_PULLDOWN);
   
   // Motors
   pinMode(9, OUTPUT); // Left PWM
@@ -161,8 +159,8 @@ void loop() {
     Udp.endPacket();
     if(packetBuffer[0] == 'Z' && packetBuffer[1] == 'D' && packetBuffer[2] == 'B'){
       if(packetBuffer[3]=='1'){
-      CaptureSensorData();
-      SendSensorData();
+        CaptureSensorData();
+        SendSensorData();
       }
       else{
         sweeping = packetBuffer[8] == '1';
@@ -208,30 +206,40 @@ void printWiFiStatus() {
     Serial.println(" dBm");
 }
 
+double frequencyDetector(byte pin, int lowerThreshold, int upperThreshold,int sampleTime = 50){
+    long t = millis();
+    bool rising = false;
+    int i = 0;
+    double freq = 0;
+    long signalTime = micros();
+    bool first = true;
+    do{
+        int sample = analogRead(pin);
+        if(sample > upperThreshold && rising){
+            if(!first){
+                long d = micros()-signalTime;
+                i++;
+                freq += 1.0/(d) * 1000000;
+                signalTime = micros();
+            }
+            first = false;
+            rising = false;
+        }
+        if(sample < lowerThreshold && !rising){
+            rising = true;
+        }
+    }while(millis() < t+sampleTime);
+    return freq / i;
+}
+
 void CaptureSensorData(){
-    attachInterrupt(digitalPinToInterrupt(interruptPin),count,RISING);
-    delay(100);
-    detachInterrupt(digitalPinToInterrupt(interruptPin));
-    SensorData["radio"] = freq;
-    // attachInterrupt(digitalPinToInterrupt(infraredPin),count,RISING);
-    // delay(100);
-    // detachInterrupt(digitalPinToInterrupt(infraredPin));
-    SensorData["infrared"] = freq;
-    // attachInterrupt(digitalPinToInterrupt(accousticPin),count,RISING);
-    // delay(100);
-    // detachInterrupt(digitalPinToInterrupt(accousticPin));
-    SensorData["accoustic"] = freq;
+    SensorData["radio"] = frequencyDetector(radioPin,10,40,100);
+    SensorData["infrared"] = 0; // frequencyDetector(infraredPin,10,50,200);
+    SensorData["accoustic"] = 0; //frequencyDetector(accousticPin,10,100,30);
 }
 
 void SendSensorData(){
-
     Udp.beginPacket(Udp.remoteIP(), Udp.remotePort());
     serializeJson(SensorData,Udp);
     Udp.endPacket();
-}
-
-void count(){
-    long d = micros()-signalTime;
-    freq = 1.0/(d) * 1000000;
-    signalTime = micros();
 }
