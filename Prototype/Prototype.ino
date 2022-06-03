@@ -13,7 +13,7 @@ unsigned int localPort = 2390;
 char packetBuffer[255];
 WiFiUDP Udp;
 
-// Signal detection variables
+// Sensor variables
 const byte radioPin = A0; // Radio sensor output
 const byte irPin = A1; // IR sensor output
 StaticJsonDocument<128> SensorData; // Seensor data to be transmitted 128 bytes large
@@ -27,7 +27,6 @@ const int SWEEP_WIDTH = 0xb0; // How wide the sweep range should be
 // General useful values
 unsigned long prevTime = 0;
 int delta = 0; // Time since last loop() call
-Adafruit_NeoPixel pixels(1, 40, NEO_GRB + NEO_KHZ800); //Enable built in NeoPixel
 
 // Wheel state
 bool F, B, L, R = false;
@@ -39,6 +38,7 @@ bool sweeping = false;
 // For debugging
 int pos = 0;
 char inputString[5];
+Adafruit_NeoPixel pixels(1, 40, NEO_GRB + NEO_KHZ800); //Enable built in NeoPixel
 
 // freq = false: tune to 61kHz. freq = true: tune to 89kHz.
 void tune_radio(bool freq) {
@@ -155,6 +155,7 @@ void loop() {
   // Update delta
   delta = millis() - prevTime;
   prevTime = millis();
+  
   //Udp inputs
   int packetSize = Udp.parsePacket();
   if(packetSize){
