@@ -12,3 +12,4 @@ npm run start
 built with UDP and socket.io
 the c# part is used for testing purpose ( to send data to nodejs server)
 
+the function ```processdata``` in index.js will be used to do the analysis
