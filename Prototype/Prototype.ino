@@ -14,7 +14,8 @@ char packetBuffer[255];
 WiFiUDP Udp;
 
 // Signal detection variables
-const byte radioPin = A0; // Pin that will detect the radio signal
+const byte radioPin = A0; // Radio sensor output
+const byte irPin = A1; // IR sensor output
 StaticJsonDocument<128> SensorData; // Seensor data to be transmitted 128 bytes large
 
 // Steering/movement constants
@@ -38,6 +39,12 @@ bool sweeping = false;
 // For debugging
 int pos = 0;
 char inputString[5];
+
+// freq = false: tune to 61kHz. freq = true: tune to 89kHz.
+void tune_radio(bool freq) {
+  digitalWrite(2, freq ? HIGH : LOW); // Turn switch on/off to adjust capacitance
+  delay(15); // Wait for transient effects to subside
+}
 
 int exponential_steering(int current, int target) {
   int difference = abs(current - target);
@@ -102,9 +109,11 @@ void setup() {
   // Initialise NeoPixel
   pixels.begin();
   pixels.setBrightness(255);
-  // Sensor
-  pinMode(radioPin, INPUT_PULLDOWN);
   
+  // Sensors
+  pinMode(radioPin, INPUT_PULLDOWN);
+  pinMode(2, OUTPUT); // Controls radio frequency tuning
+  pinMode(irPin, INPUT_PULLDOWN);
   // Motors
   pinMode(9, OUTPUT); // Left PWM
   pinMode(8, OUTPUT); // Left DIR
@@ -233,9 +242,16 @@ double frequencyDetector(byte pin, int lowerThreshold, int upperThreshold,int sa
 }
 
 void CaptureSensorData(){
-    SensorData["radio"] = frequencyDetector(radioPin,10,40,100);
+    // Radio sensor
+    tune_radio(false); // Tune to 61kHz
+    SensorData["radio61k"] = frequencyDetector(radioPin, 10, 40, 100);
+    tune_radio(true); // Tune to 89kHz
+    SensorData["radio89k"] = frequencyDetector(radioPin, 10, 40, 100);
+
+    // IR sensor
     SensorData["infrared"] = 0; // frequencyDetector(infraredPin,10,50,200);
-    SensorData["accoustic"] = 0; //frequencyDetector(accousticPin,10,100,30);
+    
+    //SensorData["accoustic"] = 0; //frequencyDetector(accousticPin,10,100,30);
 }
 
 void SendSensorData(){
