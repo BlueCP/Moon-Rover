@@ -200,16 +200,16 @@ void loop() {
 }
 
 void printWiFiStatus() {
-  // print the SSID of the network you're attached to:
+  // print the SSID of the network
     Serial.print("SSID: ");
     Serial.println(WiFi.SSID());
 
-  // print your WiFi shield's IP address:
+  // print WiFi shield's IP address
     IPAddress ip = WiFi.localIP();
     Serial.print("IP Address: ");
     Serial.println(ip);
 
-  // print the received signal strength:
+  // print the received signal strength
     long rssi = WiFi.RSSI();
     Serial.print("signal strength (RSSI):");
     Serial.print(rssi);
@@ -220,27 +220,30 @@ double frequencyDetector(byte pin, int lowerThreshold, int upperThreshold,int sa
     long t = millis();
     bool rising = false;
     int i = 0;
-    double freq = 0;
-    long signalTime = micros();
-    bool first = true;
+    double freq = 0; 
+    long signalTime;
+    bool trig = true;
     do{
         int sample = analogRead(pin);
         if(sample > upperThreshold && rising){
-            if(!first){
-                long d = micros()-signalTime;
+            if(trig){
+                trig = false;
+            }
+            else{
+                long d = micros()-signalTime + 43.7; //Delay compensation calculated at 500Hz reference frequency 
                 i++;
                 freq += 1.0/(d) * 1000000;
-                signalTime = micros();
             }
-            first = false;
+            signalTime = micros();
             rising = false;
         }
         if(sample < lowerThreshold && !rising){
             rising = true;
         }
-    }while(millis() < t+sampleTime);
+    }while(millis() - t < sampleTime);
     return freq / i;
 }
+
 
 void CaptureSensorData(){
     // Radio sensor
