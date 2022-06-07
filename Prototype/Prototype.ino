@@ -120,10 +120,8 @@ void setup() {
   pinMode(6, OUTPUT); // Right PWM
   pinMode(3, OUTPUT); // Right DIR
 
-  // Error out if no WiFi Shield
-  if (WiFi.status() == WL_NO_SHIELD){
-    Serial.println("WiFi module not present");
-    while (true){
+  //Error loop if connection error during setup
+  if(!connectToWireless()){
       pixels.setPixelColor(0,pixels.Color(255,0,0));
       pixels.show();
       while (true){
@@ -134,27 +132,40 @@ void setup() {
         pixels.show();
         delay(500);
       }
-    }
   }
-  while ( status != WL_CONNECTED) {
+}
+
+bool connectToWireless(){
+  // Error out if no WiFi Shield
+  if (WiFi.status() == WL_NO_SHIELD){
+    Serial.println("WiFi module not present");
+    return false;
+  }
+  while (WiFi.status() != WL_CONNECTED) {
     Serial.print("Attempting to connect to SSID: ");
     Serial.println(ssid);
     pixels.setPixelColor(0,pixels.Color(0,0,255));
     pixels.show();
     status = WiFi.begin(ssid, pass);
-    delay(10000);
+    delay(5000);
   }
   Serial.println("Connected to wifi");
   pixels.setPixelColor(0,pixels.Color(0,255,0));
   pixels.show();
   printWiFiStatus();
-  Udp.begin(localPort); 
+  Udp.begin(localPort);
+  return true;
 }
 
 void loop() {
   // Update delta
   delta = millis() - prevTime;
   prevTime = millis();
+  
+  //Check connection
+  if(WiFi.status() != WL_CONNECTED){
+    connectToWireless();
+  }
   
   //Udp inputs
   int packetSize = Udp.parsePacket();
