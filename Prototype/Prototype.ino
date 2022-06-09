@@ -244,14 +244,11 @@ double frequencyDetector(byte pin, int lowerThreshold, int upperThreshold,int sa
 void CaptureSensorData(){
     // Radio sensor
     tune_radio(false); // Tune to 61kHz
-    SensorData["radio61k"] = frequencyDetector(radioPin, 10, 40, 100);
+    SensorData["radio61k"] = frequencyDetector(radioPin, 10, 40, 100); //100ms will collect 15 samples at 151Hz
     tune_radio(true); // Tune to 89kHz
     SensorData["radio89k"] = frequencyDetector(radioPin, 10, 40, 100);
-
     // IR sensor
-    SensorData["infrared"] = 0; // frequencyDetector(infraredPin,10,50,200);
-    
-    //SensorData["accoustic"] = 0; //frequencyDetector(accousticPin,10,100,30);
+    SensorData["infrared"] = frequencyDetector(irPin,10,50,40); //40ms sample time will collect 15 samples at 353Hz
 }
 
 void SendSensorData(){
