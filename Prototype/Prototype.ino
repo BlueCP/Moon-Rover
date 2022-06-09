@@ -103,26 +103,47 @@ void right_velocity() {
   }
 }
 
+bool connectToWireless(){
+  // Error out if no WiFi Shield
+  if (WiFi.status() == WL_NO_SHIELD){
+    Serial.println("WiFi module not present");
+    return false;
+  }
+  while ( status != WL_CONNECTED) {
+    Serial.print("Attempting to connect to SSID: ");
+    Serial.println(ssid);
+    pixels.setPixelColor(0,pixels.Color(0,0,255));
+    pixels.show();
+    status = WiFi.begin(ssid, pass);
+    delay(5000);
+  }
+  Serial.println("Connected to wifi");
+  pixels.setPixelColor(0,pixels.Color(0,255,0));
+  pixels.show();
+  printWiFiStatus();
+  Udp.begin(localPort); 
+  return true;
+}
+
 void setup() {
   // Initialise serial output
   Serial.begin(9600);
   // Initialise NeoPixel
   pixels.begin();
   pixels.setBrightness(255);
-  
+
   // Sensors
   pinMode(radioPin, INPUT_PULLDOWN);
-  pinMode(2, OUTPUT); // Controls radio frequency tuning
   pinMode(irPin, INPUT_PULLDOWN);
+  pinMode(2, OUTPUT); // Controls radio frequency tuning
   // Motors
   pinMode(9, OUTPUT); // Left PWM
   pinMode(8, OUTPUT); // Left DIR
   pinMode(6, OUTPUT); // Right PWM
   pinMode(3, OUTPUT); // Right DIR
 
-  // Error out if no WiFi Shield
-  if (WiFi.status() == WL_NO_SHIELD){
-    Serial.println("WiFi module not present");
+  if(!connectToWireless){
+    // Error out if wireless cannot be connected on boot
     while (true){
       pixels.setPixelColor(0,pixels.Color(255,0,0));
       pixels.show();
@@ -136,25 +157,18 @@ void setup() {
       }
     }
   }
-  while ( status != WL_CONNECTED) {
-    Serial.print("Attempting to connect to SSID: ");
-    Serial.println(ssid);
-    pixels.setPixelColor(0,pixels.Color(0,0,255));
-    pixels.show();
-    status = WiFi.begin(ssid, pass);
-    delay(10000);
-  }
-  Serial.println("Connected to wifi");
-  pixels.setPixelColor(0,pixels.Color(0,255,0));
-  pixels.show();
-  printWiFiStatus();
-  Udp.begin(localPort); 
 }
 
 void loop() {
   // Update delta
   delta = millis() - prevTime;
   prevTime = millis();
+  
+  //Check connection
+  if(WiFi.status() != WL_CONNECTED){
+    F = B = L = R = false; // Make sure rover comes to a stop when it loses connection
+    connectToWireless();
+  }
   //Udp inputs
   int packetSize = Udp.parsePacket();
   if(packetSize){
@@ -254,5 +268,6 @@ void CaptureSensorData(){
 void SendSensorData(){
     Udp.beginPacket(Udp.remoteIP(), Udp.remotePort());
     serializeJson(SensorData,Udp);
+    serializeJson(SensorData,Serial);
     Udp.endPacket();
 }
