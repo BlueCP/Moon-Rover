@@ -13,7 +13,7 @@ unsigned int localPort = 2390;
 char packetBuffer[255];
 WiFiUDP Udp;
 
-// Sensor variables
+// Signal detection variables
 const byte radioPin = A0; // Radio sensor output
 const byte irPin = A1; // IR sensor output
 StaticJsonDocument<128> SensorData; // Seensor data to be transmitted 128 bytes large
@@ -27,6 +27,7 @@ const int SWEEP_WIDTH = 0xb0; // How wide the sweep range should be
 // General useful values
 unsigned long prevTime = 0;
 int delta = 0; // Time since last loop() call
+Adafruit_NeoPixel pixels(1, 40, NEO_GRB + NEO_KHZ800); //Enable built in NeoPixel
 
 // Wheel state
 bool F, B, L, R = false;
@@ -38,7 +39,6 @@ bool sweeping = false;
 // For debugging
 int pos = 0;
 char inputString[5];
-Adafruit_NeoPixel pixels(1, 40, NEO_GRB + NEO_KHZ800); //Enable built in NeoPixel
 
 // freq = false: tune to 61kHz. freq = true: tune to 89kHz.
 void tune_radio(bool freq) {
@@ -103,45 +103,13 @@ void right_velocity() {
   }
 }
 
-void setup() {
-  // Initialise serial output
-  Serial.begin(9600);
-  // Initialise NeoPixel
-  pixels.begin();
-  pixels.setBrightness(255);
-  
-  // Sensors
-  pinMode(radioPin, INPUT_PULLDOWN);
-  pinMode(2, OUTPUT); // Controls radio frequency tuning
-  pinMode(irPin, INPUT_PULLDOWN);
-  // Motors
-  pinMode(9, OUTPUT); // Left PWM
-  pinMode(8, OUTPUT); // Left DIR
-  pinMode(6, OUTPUT); // Right PWM
-  pinMode(3, OUTPUT); // Right DIR
-
-  //Error loop if connection error during setup
-  if(!connectToWireless()){
-      pixels.setPixelColor(0,pixels.Color(255,0,0));
-      pixels.show();
-      while (true){
-        pixels.setBrightness(0);
-        pixels.show();
-        delay(500);
-        pixels.setBrightness(255);
-        pixels.show();
-        delay(500);
-      }
-  }
-}
-
 bool connectToWireless(){
   // Error out if no WiFi Shield
   if (WiFi.status() == WL_NO_SHIELD){
     Serial.println("WiFi module not present");
     return false;
   }
-  while (WiFi.status() != WL_CONNECTED) {
+  while ( status != WL_CONNECTED) {
     Serial.print("Attempting to connect to SSID: ");
     Serial.println(ssid);
     pixels.setPixelColor(0,pixels.Color(0,0,255));
@@ -153,8 +121,42 @@ bool connectToWireless(){
   pixels.setPixelColor(0,pixels.Color(0,255,0));
   pixels.show();
   printWiFiStatus();
-  Udp.begin(localPort);
+  Udp.begin(localPort); 
   return true;
+}
+
+void setup() {
+  // Initialise serial output
+  Serial.begin(9600);
+  // Initialise NeoPixel
+  pixels.begin();
+  pixels.setBrightness(255);
+
+  // Sensors
+  pinMode(radioPin, INPUT_PULLDOWN);
+  pinMode(irPin, INPUT_PULLDOWN);
+  pinMode(2, OUTPUT); // Controls radio frequency tuning
+  // Motors
+  pinMode(9, OUTPUT); // Left PWM
+  pinMode(8, OUTPUT); // Left DIR
+  pinMode(6, OUTPUT); // Right PWM
+  pinMode(3, OUTPUT); // Right DIR
+
+  if(!connectToWireless){
+    // Error out if wireless cannot be connected on boot
+    while (true){
+      pixels.setPixelColor(0,pixels.Color(255,0,0));
+      pixels.show();
+      while (true){
+        pixels.setBrightness(0);
+        pixels.show();
+        delay(500);
+        pixels.setBrightness(255);
+        pixels.show();
+        delay(500);
+      }
+    }
+  }
 }
 
 void loop() {
@@ -164,9 +166,9 @@ void loop() {
   
   //Check connection
   if(WiFi.status() != WL_CONNECTED){
+    F = B = L = R = false; // Make sure rover comes to a stop when it loses connection
     connectToWireless();
   }
-  
   //Udp inputs
   int packetSize = Udp.parsePacket();
   if(packetSize){
@@ -211,16 +213,16 @@ void loop() {
 }
 
 void printWiFiStatus() {
-  // print the SSID of the network
+  // print the SSID of the network you're attached to:
     Serial.print("SSID: ");
     Serial.println(WiFi.SSID());
 
-  // print WiFi shield's IP address
+  // print your WiFi shield's IP address:
     IPAddress ip = WiFi.localIP();
     Serial.print("IP Address: ");
     Serial.println(ip);
 
-  // print the received signal strength
+  // print the received signal strength:
     long rssi = WiFi.RSSI();
     Serial.print("signal strength (RSSI):");
     Serial.print(rssi);
@@ -231,46 +233,41 @@ double frequencyDetector(byte pin, int lowerThreshold, int upperThreshold,int sa
     long t = millis();
     bool rising = false;
     int i = 0;
-    double freq = 0; 
-    long signalTime;
-    bool trig = true;
+    double freq = 0;
+    long signalTime = micros();
+    bool first = true;
     do{
         int sample = analogRead(pin);
         if(sample > upperThreshold && rising){
-            if(trig){
-                trig = false;
-            }
-            else{
-                long d = micros()-signalTime + 43.7; //Delay compensation calculated at 500Hz reference frequency 
+            if(!first){
+                long d = micros()-signalTime;
                 i++;
                 freq += 1.0/(d) * 1000000;
+                signalTime = micros();
             }
-            signalTime = micros();
+            first = false;
             rising = false;
         }
         if(sample < lowerThreshold && !rising){
             rising = true;
         }
-    }while(millis() - t < sampleTime);
+    }while(millis() < t+sampleTime);
     return freq / i;
 }
-
 
 void CaptureSensorData(){
     // Radio sensor
     tune_radio(false); // Tune to 61kHz
-    SensorData["radio61k"] = frequencyDetector(radioPin, 10, 40, 100);
+    SensorData["radio61k"] = frequencyDetector(radioPin, 10, 40, 100); //100ms will collect 15 samples at 151Hz
     tune_radio(true); // Tune to 89kHz
     SensorData["radio89k"] = frequencyDetector(radioPin, 10, 40, 100);
-
     // IR sensor
-    SensorData["infrared"] = 0; // frequencyDetector(infraredPin,10,50,200);
-    
-    //SensorData["accoustic"] = 0; //frequencyDetector(accousticPin,10,100,30);
+    SensorData["infrared"] = frequencyDetector(irPin,10,50,40); //40ms sample time will collect 15 samples at 353Hz
 }
 
 void SendSensorData(){
     Udp.beginPacket(Udp.remoteIP(), Udp.remotePort());
     serializeJson(SensorData,Udp);
+    serializeJson(SensorData,Serial);
     Udp.endPacket();
 }
