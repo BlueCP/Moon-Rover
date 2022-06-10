@@ -16,7 +16,7 @@ WiFiUDP Udp;
 // Signal detection variables
 const byte radioPin = A0;            // Radio sensor output
 const byte irPin = A1;               // IR sensor output
-StaticJsonDocument<128> SensorData;  // Seensor data to be transmitted 128 bytes large
+StaticJsonDocument<128> SensorData;  // Sensor data to be transmitted 128 bytes large
 
 // Steering/movement constants
 const float TURNING_FACTOR = 0.5;  // Number between 0 and 1 to control maximum sharpness of turns
@@ -199,8 +199,11 @@ void loop() {
     }
 
     processPacket(false);
+    move();
+}
 
-    if (sweeping) {  // Note that sweeping overrides all other inputs
+void move(){
+  if (sweeping) {  // Note that sweeping overrides all other inputs
         sweep();
     } else {
         sweepTime = 0;
@@ -257,7 +260,8 @@ double frequencyDetector(byte pin, int lowerThreshold, int upperThreshold, int s
         if (sample < lowerThreshold && !rising) {
             rising = true;
         }
-        processPacket(true);
+        processPacket(true);  // Process incoming packets while waiting for signal change
+        move();               // Ensure movement is unaffected while sensing
     } while (millis() - t < sampleTime);
     return freq / i;
 }
