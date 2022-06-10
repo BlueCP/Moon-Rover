@@ -142,7 +142,7 @@ void setup() {
   pinMode(6, OUTPUT); // Right PWM
   pinMode(3, OUTPUT); // Right DIR
 
-  if(!connectToWireless){
+  if(!connectToWireless()){
     // Error out if wireless cannot be connected on boot
     while (true){
       pixels.setPixelColor(0,pixels.Color(255,0,0));
@@ -159,41 +159,51 @@ void setup() {
   }
 }
 
+void processPacket(bool sensing)
+{
+  int packetSize = Udp.parsePacket();
+  if (packetSize)
+  {
+    // Read incoming control packet into buffer.
+    int len = Udp.read(packetBuffer, 255);
+    if (len > 0)
+    {
+      packetBuffer[len] = 0;
+    }
+    Udp.beginPacket(Udp.remoteIP(), Udp.remotePort());
+    Udp.write("ACK");
+    Udp.endPacket();
+    if (packetBuffer[0] == 'Z' && packetBuffer[1] == 'D' && packetBuffer[2] == 'B')
+    {
+      if (packetBuffer[3] == '1' && !sensing)
+      {
+        CaptureSensorData();
+        delay(50);
+        SendSensorData();
+      }
+      sweeping = packetBuffer[8] == '1';
+      F = packetBuffer[4] == '1';
+      B = packetBuffer[5] == '1';
+      L = packetBuffer[6] == '1';
+      R = packetBuffer[7] == '1';
+    }
+  }
+  Udp.flush();
+}
+
 void loop() {
   // Update delta
   delta = millis() - prevTime;
   prevTime = millis();
   
   //Check connection
-  if(WiFi.status() != WL_CONNECTED){
+  if(WiFi.status() == WL_DISCONNECTED){
     F = B = L = R = false; // Make sure rover comes to a stop when it loses connection
+    WiFi.end();
     connectToWireless();
   }
-  //Udp inputs
-  int packetSize = Udp.parsePacket();
-  if(packetSize){
-    // Read incoming control packet into buffer.
-    int len = Udp.read(packetBuffer, 255);
-    if(len > 0){
-      packetBuffer[len] = 0;
-    }
-    Udp.beginPacket(Udp.remoteIP(),Udp.remotePort());
-    Udp.write("ACK");
-    Udp.endPacket();
-    if(packetBuffer[0] == 'Z' && packetBuffer[1] == 'D' && packetBuffer[2] == 'B'){
-      if(packetBuffer[3]=='1'){
-        CaptureSensorData();
-        SendSensorData();
-      }
-      else{
-        sweeping = packetBuffer[8] == '1';
-        F = packetBuffer[4] == '1';
-        B = packetBuffer[5] == '1';
-        L = packetBuffer[6] == '1';
-        R = packetBuffer[7] == '1';
-      }
-    }
-  }
+
+  processPacket(false);
 
   if (sweeping) { // Note that sweeping overrides all other inputs
     sweep();
@@ -201,7 +211,7 @@ void loop() {
     sweepTime = 0;
     left_velocity();
     right_velocity();
-  }  
+  }
 
   // PWM outputs
   analogWrite(9, abs(leftWheelVelocity));
@@ -251,11 +261,14 @@ double frequencyDetector(byte pin, int lowerThreshold, int upperThreshold,int sa
         if(sample < lowerThreshold && !rising){
             rising = true;
         }
+        processPacket(true);
     }while(millis() < t+sampleTime);
     return freq / i;
 }
 
 void CaptureSensorData(){
+    pixels.setPixelColor(0,pixels.Color(255,255,0));
+    pixels.show();
     // Radio sensor
     tune_radio(false); // Tune to 61kHz
     SensorData["radio61k"] = frequencyDetector(radioPin, 10, 40, 100); //100ms will collect 15 samples at 151Hz
@@ -263,11 +276,14 @@ void CaptureSensorData(){
     SensorData["radio89k"] = frequencyDetector(radioPin, 10, 40, 100);
     // IR sensor
     SensorData["infrared"] = frequencyDetector(irPin,10,50,40); //40ms sample time will collect 15 samples at 353Hz
+  
 }
 
 void SendSensorData(){
     Udp.beginPacket(Udp.remoteIP(), Udp.remotePort());
     serializeJson(SensorData,Udp);
-    serializeJson(SensorData,Serial);
+    //serializeJson(SensorData,Serial);
     Udp.endPacket();
+    pixels.setPixelColor(0,pixels.Color(0,255,0));
+    pixels.show();
 }
