@@ -109,12 +109,12 @@ bool connectToWireless(){
     Serial.println("WiFi module not present");
     return false;
   }
-  while ( status != WL_CONNECTED) {
+  while (WiFi.status() != WL_CONNECTED) {
     Serial.print("Attempting to connect to SSID: ");
     Serial.println(ssid);
     pixels.setPixelColor(0,pixels.Color(0,0,255));
     pixels.show();
-    status = WiFi.begin(ssid, pass);
+    WiFi.begin(ssid, pass);
     delay(5000);
   }
   Serial.println("Connected to wifi");
@@ -197,7 +197,8 @@ void loop() {
   prevTime = millis();
   
   //Check connection
-  if(WiFi.status() == WL_DISCONNECTED){
+  if(WiFi.status() != WL_CONNECTED){
+    Serial.println("CONNECTION LOST!!");
     F = B = L = R = false; // Make sure rover comes to a stop when it loses connection
     WiFi.end();
     connectToWireless();
