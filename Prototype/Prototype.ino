@@ -273,9 +273,9 @@ void CaptureSensorData(){
     pixels.show();
     // Radio sensor
     tune_radio(false); // Tune to 61kHz
-    SensorData["radio61k"] = frequencyDetector(radioPin, 186, 279, 100); //100ms will collect 15 samples at 151Hz
+    SensorData["radio61k"] = frequencyDetector(radioPin, 217, 310, 100); //100ms will collect 15 samples at 151Hz
     tune_radio(true); // Tune to 89kHz
-    SensorData["radio89k"] = frequencyDetector(radioPin, 263, 310, 100);
+    SensorData["radio89k"] = frequencyDetector(radioPin, 248, 341, 100);
     // IR sensor
     SensorData["infrared"] = frequencyDetector(irPin,10,50,40); //40ms sample time will collect 15 samples at 353Hz
   
