@@ -3,26 +3,21 @@ import socket
 from time import sleep
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.label import Label
-from kivy.uix.button import Button
+# from kivy.core.window import Window
+# Window.fullscreen = True
 
 
-# TODO: REPORT???
-# TODO: Label info at the top - network info.
-# TODO: Classes for buttons? kinda messy
-
-
-localaddr = ('', 41181)
+localaddr = ('', 2390)
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 # AF_INET = internet family addresses (IP), SOCK_DGRAM = udp datagram packets
 sock.bind(localaddr)
 
-rover_address = ('172.20.10.7', 2390)
+rover_address = ['127.0.0.1', 2390]  # set to loopback address by default
 
-control = [0, 0, 0, 0]
-# Control array, corresponds to the 4 possible motor states:
-# forward, backward, left, right (in that order)
-move = ["forward", "backward", "left", "right"]
+controlBuffer = ["0", "0", "0", "0", "0", "0"]
+controlCode = "ZDB"  # start sequence to verify that it is coming from the correct host
+# Control array, corresponds to the 5 possible motor states and a sensor flag:
+# sensor, forward, backward, left, right, sweep (in that order)
 
 
 class ControlInterface(BoxLayout):
@@ -30,40 +25,60 @@ class ControlInterface(BoxLayout):
         super().__init__(**kwargs)
 
     @staticmethod
+    def toggle_data():
+        if controlBuffer[0] == "0":
+            controlBuffer[0] = "1"
+        else:
+            controlBuffer[0] = "0"
+
+    @staticmethod
     def move_forward():
-        control[1] = 0  # set backward to low
-        control[0] = 1
+        controlBuffer[2] = "0"
+        controlBuffer[1] = "1"
 
     @staticmethod
     def move_backward():
-        control[0] = 0
-        control[1] = 1
+        controlBuffer[1] = "0"
+        controlBuffer[2] = "1"
 
     @staticmethod
     def move_left():
-        control[3] = 0
-        control[2] = 1
+        controlBuffer[4] = "0"
+        controlBuffer[3] = "1"
 
     @staticmethod
     def move_right():
-        control[2] = 0
-        control[3] = 1
+        controlBuffer[3] = "0"
+        controlBuffer[4] = "1"
 
     @staticmethod
     def forward_release():
-        control[0] = 0
+        controlBuffer[1] = "0"
 
     @staticmethod
     def backward_release():
-        control[1] = 0
+        controlBuffer[2] = "0"
 
     @staticmethod
     def left_release():
-        control[2] = 0
+        controlBuffer[3] = "0"
 
     @staticmethod
     def right_release():
-        control[3] = 0
+        controlBuffer[4] = "0"
+
+    @staticmethod
+    def toggle_sweep():
+        if controlBuffer[5] == "0":
+            controlBuffer[5] = "1"
+        else:
+            controlBuffer[5] = "0"
+
+    def update_address(self):
+        global rover_address
+        address = self.ids["addressinput"].text
+        port = self.ids["portinput"].text
+        rover_address = [address, int(port)]
 
 
 class rover(App):
@@ -72,21 +87,21 @@ class rover(App):
 
 def send():
     while True:
-        for i in range(0, 4):
-            if control[i] == 1:
-                msg = (move[i]).encode(encoding='utf-8')
-                sent = sock.sendto(msg, rover_address)
-                if sent:
-                    print("sent " + move[i])
-
-        sleep(0.1)  # note that this suspends execution of only the thread
+        try:
+            msg = (controlCode + ''.join(controlBuffer)).encode(encoding='utf-8')
+            sent = sock.sendto(msg, tuple(rover_address))  # address must be a tuple
+        except Exception:
+            continue
+        if sent:
+            print(msg)  # used for logging purposes
+        sleep(0.1)  # note that this suspends execution of only this thread
 
 
 def recv():
     while True:
         try:
             data, server = sock.recvfrom(1518)
-            print("recieved : " + data.decode(encoding='utf-8'))
+            print("received: " + data.decode(encoding='utf-8'))
         except Exception:
             print("\nExit...\n")
             break
@@ -101,6 +116,6 @@ if __name__ == "__main__":
     recvThread.setDaemon(True)
 
     sendThread.start()
-    recvThread.start()
+    recvThread.start()  # two threads, running concurrently.
 
     rover().run()
