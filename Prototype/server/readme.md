@@ -4,7 +4,11 @@ used to present the data onto webpages ( assessible on different devices
 
 ## To run:
 
-use npm and run 
+use npm and 
+```
+npm install
+```
+to install the required modules
 ```
 npm run start
 ```
