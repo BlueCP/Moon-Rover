@@ -243,26 +243,27 @@ double frequencyDetector(byte pin, int lowerThreshold, int upperThreshold,int sa
     long t = millis();
     bool rising = false;
     int i = 0;
-    double freq = 0;
-    long signalTime = micros();
-    bool first = true;
+    double freq = 0; 
+    long signalTime;
+    bool trig = true;
     do{
         int sample = analogRead(pin);
         if(sample > upperThreshold && rising){
-            if(!first){
-                long d = micros()-signalTime;
+            if(trig){
+                trig = false;
+            }
+            else{
+                long d = micros()-signalTime + 43.7; //Delay compensation calculated at 500Hz reference frequency 
                 i++;
                 freq += 1.0/(d) * 1000000;
-                signalTime = micros();
             }
-            first = false;
+            signalTime = micros();
             rising = false;
         }
         if(sample < lowerThreshold && !rising){
             rising = true;
         }
-        processPacket(true);
-    }while(millis() < t+sampleTime);
+    }while(millis() - t < sampleTime);
     return freq / i;
 }
 
@@ -271,9 +272,9 @@ void CaptureSensorData(){
     pixels.show();
     // Radio sensor
     tune_radio(false); // Tune to 61kHz
-    SensorData["radio61k"] = frequencyDetector(radioPin, 10, 40, 100); //100ms will collect 15 samples at 151Hz
+    SensorData["radio61k"] = frequencyDetector(radioPin, 186, 279, 100); //100ms will collect 15 samples at 151Hz
     tune_radio(true); // Tune to 89kHz
-    SensorData["radio89k"] = frequencyDetector(radioPin, 10, 40, 100);
+    SensorData["radio89k"] = frequencyDetector(radioPin, 263, 310, 100);
     // IR sensor
     SensorData["infrared"] = frequencyDetector(irPin,10,50,40); //40ms sample time will collect 15 samples at 353Hz
   
