@@ -6,7 +6,6 @@
 #include <WiFiUdp.h>
 
 // Wireless variables
-int status = WL_IDLE_STATUS;
 char ssid[] = "Nik";
 char pass[] = "xyz55555";
 unsigned int localPort = 2390;
@@ -14,9 +13,9 @@ char packetBuffer[255];
 WiFiUDP Udp;
 
 // Signal detection variables
-const byte radioPin = A0;            // Radio sensor output
-const byte irPin = A1;               // IR sensor output
-StaticJsonDocument<128> SensorData;  // Sensor data to be transmitted 128 bytes large
+const byte radioPin = A0;           // Radio sensor output
+const byte irPin = A1;              // IR sensor output
+StaticJsonDocument<64> SensorData;  // Sensor data to be transmitted 64 bytes large
 
 // Steering/movement constants
 const float TURNING_FACTOR = 0.5;  // Number between 0 and 1 to control maximum sharpness of turns
@@ -193,7 +192,7 @@ void loop() {
     // Check connection
     if (WiFi.status() != WL_CONNECTED) {
         Serial.println("CONNECTION LOST!!");
-        F = B = L = R = false;  // Make sure rover comes to a stop when it loses connection
+        sweeping = F = B = L = R = false;  // Make sure rover comes to a stop when it loses connection
         WiFi.end();
         connectToWireless();
     }
@@ -202,8 +201,8 @@ void loop() {
     move();
 }
 
-void move(){
-  if (sweeping) {  // Note that sweeping overrides all other inputs
+void move() {
+    if (sweeping) {  // Note that sweeping overrides all other inputs
         sweep();
     } else {
         sweepTime = 0;
