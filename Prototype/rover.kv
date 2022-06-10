@@ -2,8 +2,32 @@ ControlInterface:
 
 <ControlInterface>:
     orientation: "vertical"
-    Label:
-        text: "network connection stats blah blah select network? "
+    BoxLayout:
+        orientation: "horizontal"
+        BoxLayout:
+            BoxLayout:
+                anchor_y: self.parent.y
+                orientation: "vertical"
+                TextInput:
+                    id: addressinput
+                    text: "127.0.0.1"  # set to loopback address by default
+                    multiline: False
+                    on_text: root.update_address()
+                TextInput:
+                    id: portinput
+                    text: "2390"  # default port
+                    multiline: False
+                    on_text: root.update_address()
+
+            ToggleButton:
+                text: "Sensor Data"
+                on_press: root.toggle_data()
+                background_color: 0.7, 0, 1, 1
+        Button:
+            on_press: root.toggle_sweep()
+            on_release: root.toggle_sweep()
+            text: "SWEEP"
+            size_hint: 0.2, 1
     BoxLayout:
         orientation: "horizontal"
         size_hint: 1, 5
