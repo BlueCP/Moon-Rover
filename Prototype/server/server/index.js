@@ -68,7 +68,8 @@ server.on("message", function (msg, rinfo) {
   // }
 
   // io.sockets.emit('field', msg.toString());
-  io.sockets.emit('field', JSON.stringify(processdata(msg)));
+  // io.sockets.emit('field', JSON.stringify(processdata(msg)));
+  //io.sockets.emit('field', JSON.stringify(processdata(JSON.stringify(testValues))));
 
 });
 
@@ -80,11 +81,29 @@ server.on("listening", function () {
 server.bind(41181);
 
 
-var result = {
+var testValues = {
   "radio61k": 151.53,
   "radio89k": 238.96,
   "infrared": 571.1}
 
+function confidence_factor(freq, ideal) {
+  if (freq == ideal) {
+    return 1
+  } else if (freq < ideal) {
+    return freq / ideal
+  } else {
+    return ideal / freq
+  }
+}
+
+var confidenceValues = {
+  "gaborium" : 0,
+  "lathwaite" : 0,
+  "adamantine" : 0,
+  "xirang" : 0,
+  "thiotimoline" : 0,
+  "netherite" : 0
+}
 
 function processdata(input){
 
@@ -96,43 +115,66 @@ function processdata(input){
   var AdamantineConfidence = Math.abs(input.radio89k -  151) /151; 
   var XirangConfidence = Math.abs(input.radio89k -  239) /239; 
   var ThiotimolineConfidence = Math.abs(input.infrared -  353) /353; 
-  var NetheriteConfidence = Math.abs(input.infrared -  571) /571; 
+  var NetheriteConfidence = Math.abs(input.infrared -  571) /571;
 
+  confidenceValues["gaborium"] = confidence_factor(input.radio61k, 151)
+  confidenceValues["lathwaite"] = confidence_factor(input.radio61k, 239)
+  confidenceValues["adamantine"] = confidence_factor(input.radio89k, 151)
+  confidenceValues["xirang"] = confidence_factor(input.radio89k, 239)
+  confidenceValues["thiotimoline"] = confidence_factor(input.infrared, 353)
+  confidenceValues["netherite"] = confidence_factor(input.infrared, 571)
 
+  var identifiedMineral = "none"
+
+  for (var key in confidenceValues) {
+    if (confidenceValues[key] > 0.9) {
+      if (identifiedMineral == "none") {
+        identifiedMineral = confidenceValues[key]
+      } else {
+        identifiedMineral = "multiple"
+        break
+      }
+    }
+  }
+
+  /**
   console.log(`GaboriumConfidence ${GaboriumConfidence*100} % \n`);
   console.log(`LathwaiteConfidence ${LathwaiteConfidence*100} % \n`);
   console.log(`AdamantineConfidence ${AdamantineConfidence*100} % \n`);
   console.log(`XirangConfidence ${XirangConfidence*100} % \n`);
   console.log(`ThiotimolineConfidence ${ThiotimolineConfidence*100} % \n`);
   console.log(`NetheriteConfidence ${NetheriteConfidence*100} % \n`);
+  **/
 
-  var maxConfidence = Math.max(GaboriumConfidence, LathwaiteConfidence, AdamantineConfidence, XirangConfidence, ThiotimolineConfidence, NetheriteConfidence)
+  for (var key in confidenceValues) {
+    console.log(key + " confidence value = " + confidenceValues[key])
+  }
 
-  var material = "error"
+  //var maxConfidence = Math.max(GaboriumConfidence, LathwaiteConfidence, AdamantineConfidence, XirangConfidence, ThiotimolineConfidence, NetheriteConfidence)
 
+  /**
   if(maxConfidence == GaboriumConfidence) material = "Gaborium";
   if(maxConfidence == LathwaiteConfidence) material = "Lathwaite";
   if(maxConfidence == AdamantineConfidence) material = "Adamantine";
   if(maxConfidence == XirangConfidence) material = "Xirang";
   if(maxConfidence == ThiotimolineConfidence) material = "Thiotimoline";
   if(maxConfidence == NetheriteConfidence) material = "Netherite";
+  **/
 
+  var result = JSON.parse(JSON.stringify(input));
 
-
-
-
-  var res = JSON.parse(JSON.stringify(input));
-
-  res["material"] = material
-  res["GaboriumConfidence"] = GaboriumConfidence
-  res["LathwaiteConfidence"] = LathwaiteConfidence
-  res["AdamantineConfidence"] = AdamantineConfidence
-  res["XirangConfidence"] = XirangConfidence
-  res["ThiotimolineConfidence"] = ThiotimolineConfidence
-  res["NetheriteConfidence"] = NetheriteConfidence
+  result["material"] = identifiedMineral
+  result["GaboriumConfidence"] = confidenceValues["gaborium"]
+  result["LathwaiteConfidence"] = confidenceValues["lathwaite"]
+  result["AdamantineConfidence"] = confidenceValues["adamantine"]
+  result["XirangConfidence"] = confidenceValues["xirang"]
+  result["ThiotimolineConfidence"] = confidenceValues["thiotimoline"]
+  result["NetheriteConfidence"] = confidenceValues["netherite"]
 
 
   //result.result1 = input.toString('utf8');
 
-  return res;
+  return result;
 }
+
+console.log(processdata(JSON.stringify(testValues)))
