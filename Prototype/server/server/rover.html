@@ -25,13 +25,25 @@
 			socket.on('field', function (data) {
 				console.log(data);
 				data = JSON.parse(data);
+				console.log(data.radio61k);
 
-				$("#field").html(data);
+				//$("#field").html(data);
+				$("#radio61k").html("radio61k: " + data.radio61k);
+				$("#radio89k").html("radio89k: " + data.radio89k);
+				$("#infrared").html("infrared: " + data.infrared);
 				$("#material").html("material: " + data.material);
+				$("#chosen_material_confidence").html("chosen_material_confidence: " + data.chosen_material_confidence);
+				$("#GaboriumConfidence").html("GaboriumConfidence: " + data.GaboriumConfidence);
+				$("#LathwaiteConfidence").html("LathwaiteConfidence: " + data.LathwaiteConfidence);
+				$("#AdamantineConfidence").html("AdamantineConfidence: " + data.AdamantineConfidence);
+				$("#XirangConfidence").html("XirangConfidence: " + data.XirangConfidence);
+				$("#ThiotimolineConfidence").html("ThiotimolineConfidence: " + data.ThiotimolineConfidence);
+				$("#NetheriteConfidence").html("NetheriteConfidence: " + data.NetheriteConfidence);
+
         		//socket.emit('message', "testess");
 			});
 
-      socket.emit('message', "testess");
+      		//socket.emit('message', "testess");
 		</script>
 
 	<!-- Jumbotron -->
@@ -47,11 +59,20 @@
 			<p id="field" class = "overflow-auto"></p>
 
 		</div>
+		<p id="radio61k">radio61k: </p>
+		<p id="radio89k">radio89k: </p>
+		<p id="infrared">infrared: </p>
 		<p id="material">material: </p>
-		<p>material</p>
-		<p>material</p>
-		<p>material</p>
-		<p>material</p>
+		<p id="chosen_material_confidence">chosen material confidence: </p>
+		<br>
+		<br>
+		<br>
+		<p id="GaboriumConfidence">GaboriumConfidence: </p>
+		<p id="LathwaiteConfidence">LathwaiteConfidence: </p>
+		<p id="AdamantineConfidence">AdamantineConfidence: </p>
+		<p id="XirangConfidence">XirangConfidence: </p>
+		<p id="ThiotimolineConfidence">ThiotimolineConfidence: </p>
+		<p id="NetheriteConfidence">NetheriteConfidence: </p>
 	</div>
 	<!-- Jumbotron -->
 

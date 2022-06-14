@@ -59,13 +59,20 @@ io.sockets.on('connection', function (socket) {
 var dgram = require("dgram");
 var server = dgram.createSocket("udp4");
 
-
+var roverip;
 
 server.on("message", function (msg, rinfo) {
-  //console.log(`server got: ${msg} from ${rinfo.address}:${rinfo.port}`);
-  //console.log("Broadcasting Message: " + msg); //Display the message coming from the terminal to the command line for debugging
+  console.log(`server got: ${msg} from ${rinfo.address}:${rinfo.port}`);
+  // /console.log("Broadcasting Message: " + msg); //Display the message coming from the terminal to the command line for debugging
+
   if(msg == "ACK"){
     return;
+  }
+
+  if(msg.toString().substring(0,3) == "ZDB"){
+    roverip = msg.toString().slice(3)
+    console.log(`updated rover ip: ${roverip}`)
+    return
   }
   // if (mySocket != 0) {
   //    mySocket.emit('field', "" + msg);
@@ -73,7 +80,9 @@ server.on("message", function (msg, rinfo) {
   // }
 
   // io.sockets.emit('field', msg.toString());
-  io.sockets.emit('field', JSON.stringify(processdata(msg)));
+  if(rinfo.address == roverip && isJson(msg.toString())){ 
+    io.sockets.emit('field', JSON.stringify(processdata(msg)))
+  }
   //io.sockets.emit('field', JSON.stringify(processdata(JSON.stringify(testValues))));
 
 });
@@ -179,6 +188,7 @@ function processdata(input){
   var result = JSON.parse(JSON.stringify(input));
   
   result["material"] = identifiedMineral
+  result["chosen_material_confidence"] = confidenceValues[identifiedMineral]
   result["GaboriumConfidence"] = confidenceValues["gaborium"]
   result["LathwaiteConfidence"] = confidenceValues["lathwaite"]
   result["AdamantineConfidence"] = confidenceValues["adamantine"]
@@ -190,6 +200,15 @@ function processdata(input){
   //result.result1 = input.toString('utf8');
   console.log(result);
   return result;
+}
+
+function isJson(str) {
+  try {
+      JSON.parse(str);
+  } catch (e) {
+      return false;
+  }
+  return true;
 }
 
 console.log(processdata(JSON.stringify(testValues)))
