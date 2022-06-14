@@ -110,21 +110,21 @@ var testValues = {
   "radio89k": 238.96,
   "infrared": 571.1}
   
-  function confidence_factor(freq, ideal) {
-    if (freq == ideal) {
-      return 1
-    } else if (freq < ideal) {
-      return freq / ideal
-    } else {
-      return ideal / freq
-    }
+function confidence_factor(freq, ideal) {
+  if (freq == ideal) {
+    return 1
+  } else if (freq < ideal) {
+    return freq / ideal
+  } else {
+    return ideal / freq
   }
-  
-  var confidenceValues = {
-    "gaborium" : 0,
-    "lathwaite" : 0,
-    "adamantine" : 0,
-    "xirang" : 0,
+}
+
+var confidenceValues = {
+  "gaborium" : 0,
+  "lathwaite" : 0,
+  "adamantine" : 0,
+  "xirang" : 0,
   "thiotimoline" : 0,
   "netherite" : 0
 }
@@ -196,8 +196,10 @@ function processdata(input){
   result["ThiotimolineConfidence"] = confidenceValues["thiotimoline"]
   result["NetheriteConfidence"] = confidenceValues["netherite"]
   
-  
-  //result.result1 = input.toString('utf8');
+  //these lines is for testing, remove it
+  result.material = "adamantine" 
+  result.chosen_material_confidence = 0.2
+
   console.log(result);
   return result;
 }

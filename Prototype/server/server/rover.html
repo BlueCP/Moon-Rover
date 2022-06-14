@@ -10,7 +10,7 @@
 		<script src="http://code.jquery.com/jquery-1.7.2.min.js"></script>
 		<script src="/socket.io/socket.io.js"></script>
 	</head>
-	<body class="container-fluid">
+	<body class="">
 
 
 
@@ -28,17 +28,39 @@
 				console.log(data.radio61k);
 
 				//$("#field").html(data);
-				$("#radio61k").html("radio61k: " + data.radio61k);
-				$("#radio89k").html("radio89k: " + data.radio89k);
-				$("#infrared").html("infrared: " + data.infrared);
-				$("#material").html("material: " + data.material);
-				$("#chosen_material_confidence").html("chosen_material_confidence: " + data.chosen_material_confidence);
-				$("#GaboriumConfidence").html("GaboriumConfidence: " + data.GaboriumConfidence);
-				$("#LathwaiteConfidence").html("LathwaiteConfidence: " + data.LathwaiteConfidence);
-				$("#AdamantineConfidence").html("AdamantineConfidence: " + data.AdamantineConfidence);
-				$("#XirangConfidence").html("XirangConfidence: " + data.XirangConfidence);
-				$("#ThiotimolineConfidence").html("ThiotimolineConfidence: " + data.ThiotimolineConfidence);
-				$("#NetheriteConfidence").html("NetheriteConfidence: " + data.NetheriteConfidence);
+				$("#radio61k").html("frequency of demodulated 61k radio signal: " + data.radio61k + "Hz");
+				$("#radio89k").html("frequency of demodulated 89k radio signal:: " + data.radio89k + "Hz");
+				$("#infrared").html("frequency of infrared: " + data.infrared + "Hz");
+				$("#material").html(data.material);
+				$("#chosen_material_confidence").html("confidence percentage of the result: " + data.chosen_material_confidence*100 + "%");
+				$("#GaboriumConfidence").html("Gaborium Confidence: " + data.GaboriumConfidence*100 + "%");
+				$("#LathwaiteConfidence").html("Lathwaite Confidence: " + data.LathwaiteConfidence*100 + "%");
+				$("#AdamantineConfidence").html("Adamantine Confidence: " + data.AdamantineConfidence*100 + "%");
+				$("#XirangConfidence").html("Xirang Confidence: " + data.XirangConfidence*100 + "%");
+				$("#ThiotimolineConfidence").html("Thiotimoline Confidence: " + data.ThiotimolineConfidence*100 + "%");
+				$("#NetheriteConfidence").html("Netherite Confidence: " + data.NetheriteConfidence*100 + "%");
+
+				$("#GaboriumConfidence").removeClass("bg-success")
+				$("#LathwaiteConfidence").removeClass("bg-success")
+				$("#AdamantineConfidence").removeClass("bg-success")
+				$("#XirangConfidence").removeClass("bg-success")
+				$("#ThiotimolineConfidence").removeClass("bg-success")
+				$("#NetheriteConfidence").removeClass("bg-success")
+
+				//hide chosen_material_confidence
+				$("#chosen_material_confidence").addClass("d-none")
+				if(data.chosen_material_confidence != null) $("#chosen_material_confidence").removeClass("d-none")
+				
+				//confidence percentages
+				var correspondingID = {
+					"gaborium" : "#GaboriumConfidence",
+					"lathwaite": "#LathwaiteConfidence",
+					"adamantine": "#AdamantineConfidence",
+					"xirang": "#XirangConfidence",
+					"thiotimoline": "#ThiotimolineConfidence",
+					"netherite": "#NetheriteConfidence"
+				}
+				$(correspondingID[data.material]).addClass("bg-success")
 
         		//socket.emit('message', "testess");
 			});
@@ -46,35 +68,36 @@
       		//socket.emit('message', "testess");
 		</script>
 
-	<!-- Jumbotron -->
-	<div class="p-5 text-center bg-light">
-		<h1 class="mb-3">Heading</h1>
-		<h4 class="mb-3">Subheading</h4>
-		<div class="d-flex justify-content-center">
 
-			<p class = ".small .text-muted .text-uppercase">
-				Data from C#: 
-			</p>
-			
-			<p id="field" class = "overflow-auto"></p>
-
-		</div>
-		<p id="radio61k">radio61k: </p>
-		<p id="radio89k">radio89k: </p>
-		<p id="infrared">infrared: </p>
-		<p id="material">material: </p>
-		<p id="chosen_material_confidence">chosen material confidence: </p>
-		<br>
-		<br>
-		<br>
-		<p id="GaboriumConfidence">GaboriumConfidence: </p>
-		<p id="LathwaiteConfidence">LathwaiteConfidence: </p>
-		<p id="AdamantineConfidence">AdamantineConfidence: </p>
-		<p id="XirangConfidence">XirangConfidence: </p>
-		<p id="ThiotimolineConfidence">ThiotimolineConfidence: </p>
-		<p id="NetheriteConfidence">NetheriteConfidence: </p>
+	<div class="p-2 mb-2 bg-primary text-white text-center">
+		<h1 class="mb-3">Moon Rover</h1>
+		<h4 class="mb-3">Group ZDB</h4>
 	</div>
-	<!-- Jumbotron -->
+	<br>
+	<br>
+	<div class="d-flex flex-column bg-secondary text-white">
+		<h5 class="text-center p-2" id="radio61k">radio61k: </h5>
+		<h5 class="text-center p-2" id="radio89k">radio89k: </h5>
+		<h5 class="text-center p-2" id="infrared">infrared: </h5>
+	</div>
+
+	<br>
+	<div class="d-flex flex-column bg-warning text-dark">
+		<h4 class="text-center p-2">Identified material: <h2 class="display-3 text-center p-2" ><strong id="material"></strong></h2> </h4>
+		<h4 class="text-center p-2" id="chosen_material_confidence">chosen material confidence: </h4>
+	</div>								
+
+	<br>
+
+	<div class="d-flex flex-column bg-danger text-white">
+		<p class="text-center p-2" id="GaboriumConfidence">GaboriumConfidence: </p>
+		<p class="text-center p-2" id="LathwaiteConfidence">LathwaiteConfidence: </p>
+		<p class="text-center p-2" id="AdamantineConfidence">AdamantineConfidence: </p>
+		<p class="text-center p-2" id="XirangConfidence">XirangConfidence: </p>
+		<p class="text-center p-2" id="ThiotimolineConfidence">ThiotimolineConfidence: </p>
+		<p class="text-center p-2" id="NetheriteConfidence">NetheriteConfidence: </p>
+	</div>
+
 
 
 		
