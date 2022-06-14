@@ -1,13 +1,13 @@
 #include <Adafruit_NeoPixel.h>
 #include <ArduinoJson.h>
-//#include "WiFi_Secret.h"
+#include "WiFi_Secret.h"
 #include <SPI.h>
 #include <WiFi101.h>
 #include <WiFiUdp.h>
 
 // Wireless variables
-char ssid[] = "Nik";
-char pass[] = "xyz55555";
+char ssid[] = SECRET_SSID;
+char pass[] = SECRET_PASS;
 unsigned int localPort = 2390;
 char packetBuffer[255];
 WiFiUDP Udp;
@@ -121,6 +121,7 @@ bool connectToWireless() {
     pixels.show();
     printWiFiStatus();
     Udp.begin(localPort);
+    broadcastIP();
     return true;
 }
 
@@ -156,6 +157,14 @@ void setup() {
             }
         }
     }
+}
+
+void broadcastIP(){
+    Udp.beginPacket("255.255.255.255",localPort);
+    Udp.write("ZDB");
+    IPAddress ip = WiFi.localIP();
+    ip.printTo(Udp);
+    Udp.endPacket();
 }
 
 void processPacket(bool sensing) {
