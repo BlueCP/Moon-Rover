@@ -1,7 +1,7 @@
-const express = require('express')
-const bodyParser = require('body-parser');
-const cors = require('cors');
-const path = require('path');
+const express = require("express");
+const bodyParser = require("body-parser");
+const cors = require("cors");
+const path = require("path");
 
 const app = express();
 const port = 3000;
@@ -15,46 +15,46 @@ app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-app.post('/book', (req, res) => {
-    // We will be coding here
+app.post("/book", (req, res) => {
+  // We will be coding here
 });
 
-app.get('/', function(req, res) {
-    res.sendFile(path.join(__dirname, '/joystick.html'));
-  });
+app.get("/", function (req, res) {
+  res.sendFile(path.join(__dirname, "/joystick.html"));
+});
 
-app.listen(port, () => console.log(`Hello world app listening on port ${port}!`));
+app.listen(port, () =>
+  console.log(`Hello world app listening on port ${port}!`)
+);
 
-
-
-  
-
-var httpapp = require('http').createServer(handler);
-var io = require('socket.io')(httpapp)
-var fs = require('fs');
+var httpapp = require("http").createServer(handler);
+var io = require("socket.io")(httpapp);
+var fs = require("fs");
 
 var mySocket = 0;
 
 httpapp.listen(4000); //Which port are we going to listen to?
 
-function handler (req, res) {
-  fs.readFile(__dirname + '/rover.html', //Load and display outputs to the index.html file
-  function (err, data) {
-    if (err) {
-      res.writeHead(500);
-      return res.end('Error loading index.html');
+function handler(req, res) {
+  fs.readFile(
+    __dirname + "/rover.html", //Load and display outputs to the index.html file
+    function (err, data) {
+      if (err) {
+        res.writeHead(500);
+        return res.end("Error loading index.html");
+      }
+      res.writeHead(200);
+      res.end(data);
     }
-    res.writeHead(200);
-    res.end(data);
-  });
+  );
 }
 
-io.sockets.on('connection', function (socket) {
-  console.log('Webpage connected'); //Confirmation that the socket has connection to the webpage
+io.sockets.on("connection", function (socket) {
+  console.log("Webpage connected"); //Confirmation that the socket has connection to the webpage
   // mySocket = socket;
   //io.sockets.emit('field', 'test SUCCESS');
 });
- 
+
 //UDP server on 41181
 var dgram = require("dgram");
 var server = dgram.createSocket("udp4");
@@ -65,14 +65,14 @@ server.on("message", function (msg, rinfo) {
   console.log(`server got: ${msg} from ${rinfo.address}:${rinfo.port}`);
   // /console.log("Broadcasting Message: " + msg); //Display the message coming from the terminal to the command line for debugging
 
-  if(msg == "ACK"){
+  if (msg == "ACK") {
     return;
   }
 
-  if(msg.toString().substring(0,3) == "ZDB"){
-    roverip = msg.toString().slice(3)
-    console.log(`updated rover ip: ${roverip}`)
-    return
+  if (msg.toString().substring(0, 3) == "ZDB") {
+    roverip = msg.toString().slice(3);
+    console.log(`updated rover ip: ${roverip}`);
+    return;
   }
   // if (mySocket != 0) {
   //    mySocket.emit('field', "" + msg);
@@ -80,87 +80,93 @@ server.on("message", function (msg, rinfo) {
   // }
 
   // io.sockets.emit('field', msg.toString());
-  if(rinfo.address == roverip && isJson(msg.toString())){ 
-    io.sockets.emit('field', JSON.stringify(processdata(msg)))
+  if (rinfo.address == roverip && isJson(msg.toString())) {
+    io.sockets.emit("field", JSON.stringify(processdata(msg)));
   }
   //io.sockets.emit('field', JSON.stringify(processdata(JSON.stringify(testValues))));
-
 });
 
 server.on("listening", function () {
   var address = server.address(); //IPAddress of the server
-  console.log("UDP server listening to " + address.address + ":" + address.port);
+  console.log(
+    "UDP server listening to " + address.address + ":" + address.port
+  );
 });
 
 server.bind(41181);
 
 var message = new Buffer("ZDB100000");
 
-function requestData(){
-  server.send(message, 0, message.length, 2390, "192.168.5.108", function(err, bytes) {
-    if (err) throw err;
-    //console.log('UDP message sent to ' + "192.168.5.108" +':'+ "2390");
-  });
+function requestData() {
+  server.send(
+    message,
+    0,
+    message.length,
+    2390,
+    roverip,
+    function (err, bytes) {
+      if (err) throw err;
+      //console.log('UDP message sent to ' + "192.168.5.108" +':'+ "2390");
+    }
+  );
 }
 
-
-
 var testValues = {
-  "radio61k": 151.53,
-  "radio89k": 238.96,
-  "infrared": 571.1}
-  
+  radio61k: 151.53,
+  radio89k: 238.96,
+  infrared: 571.1,
+};
+
 function confidence_factor(freq, ideal) {
   if (freq == ideal) {
-    return 1
+    return 1;
   } else if (freq < ideal) {
-    return freq / ideal
+    return freq / ideal;
   } else {
-    return ideal / freq
+    return ideal / freq;
   }
 }
 
 var confidenceValues = {
-  "gaborium" : 0,
-  "lathwaite" : 0,
-  "adamantine" : 0,
-  "xirang" : 0,
-  "thiotimoline" : 0,
-  "netherite" : 0
-}
+  gaborium: 0,
+  lathwaite: 0,
+  adamantine: 0,
+  xirang: 0,
+  thiotimoline: 0,
+  netherite: 0,
+};
 
-function processdata(input){
-  
-  input = JSON.parse(input.toString('utf8'))
-  
+function processdata(input) {
+  input = JSON.parse(input.toString("utf8"));
+
   // analysis data here
-  var GaboriumConfidence = Math.abs(input.radio61k -  151) /151; 
-  var LathwaiteConfidence = Math.abs(input.radio61k -  239) /239; 
-  var AdamantineConfidence = Math.abs(input.radio89k -  151) /151; 
-  var XirangConfidence = Math.abs(input.radio89k -  239) /239; 
-  var ThiotimolineConfidence = Math.abs(input.infrared -  353) /353; 
-  var NetheriteConfidence = Math.abs(input.infrared -  571) /571;
-  
-  confidenceValues["gaborium"] = confidence_factor(input.radio61k, 151)
-  confidenceValues["lathwaite"] = confidence_factor(input.radio61k, 239)
-  confidenceValues["adamantine"] = confidence_factor(input.radio89k, 151)
-  confidenceValues["xirang"] = confidence_factor(input.radio89k, 239)
-  confidenceValues["thiotimoline"] = confidence_factor(input.infrared, 353)
-  confidenceValues["netherite"] = confidence_factor(input.infrared, 571)
-  
-  var identifiedMineral = "none"
-  
+  var GaboriumConfidence = Math.abs(input.radio61k - 151) / 151;
+  var LathwaiteConfidence = Math.abs(input.radio61k - 239) / 239;
+  var AdamantineConfidence = Math.abs(input.radio89k - 151) / 151;
+  var XirangConfidence = Math.abs(input.radio89k - 239) / 239;
+  var ThiotimolineConfidence = Math.abs(input.infrared - 353) / 353;
+  var NetheriteConfidence = Math.abs(input.infrared - 571) / 571;
+
+  confidenceValues["gaborium"] = confidence_factor(input.radio61k, 151);
+  confidenceValues["lathwaite"] = confidence_factor(input.radio61k, 239);
+  confidenceValues["adamantine"] = confidence_factor(input.radio89k, 151);
+  confidenceValues["xirang"] = confidence_factor(input.radio89k, 239);
+  confidenceValues["thiotimoline"] = confidence_factor(input.infrared, 353);
+  confidenceValues["netherite"] = confidence_factor(input.infrared, 571);
+
+  var identifiedMineral = "none";
+
   for (var key in confidenceValues) {
     if (confidenceValues[key] > 0.9) {
       if (identifiedMineral == "none") {
-        identifiedMineral = confidenceValues[key]
+        identifiedMineral = confidenceValues[key];
       } else {
-        identifiedMineral = "multiple"
-        break
+        identifiedMineral = "multiple";
+        break;
       }
     }
   }
-  
+
   /**
    console.log(`GaboriumConfidence ${GaboriumConfidence*100} % \n`);
    console.log(`LathwaiteConfidence ${LathwaiteConfidence*100} % \n`);
@@ -169,13 +175,13 @@ function processdata(input){
    console.log(`ThiotimolineConfidence ${ThiotimolineConfidence*100} % \n`);
    console.log(`NetheriteConfidence ${NetheriteConfidence*100} % \n`);
    **/
-  
+
   for (var key in confidenceValues) {
     //console.log(key + " confidence value = " + confidenceValues[key])
   }
-  
+
   //var maxConfidence = Math.max(GaboriumConfidence, LathwaiteConfidence, AdamantineConfidence, XirangConfidence, ThiotimolineConfidence, NetheriteConfidence)
-  
+
   /**
    if(maxConfidence == GaboriumConfidence) material = "Gaborium";
    if(maxConfidence == LathwaiteConfidence) material = "Lathwaite";
@@ -184,21 +190,21 @@ function processdata(input){
    if(maxConfidence == ThiotimolineConfidence) material = "Thiotimoline";
    if(maxConfidence == NetheriteConfidence) material = "Netherite";
    **/
-  
+
   var result = JSON.parse(JSON.stringify(input));
-  
-  result["material"] = identifiedMineral
-  result["chosen_material_confidence"] = confidenceValues[identifiedMineral]
-  result["GaboriumConfidence"] = confidenceValues["gaborium"]
-  result["LathwaiteConfidence"] = confidenceValues["lathwaite"]
-  result["AdamantineConfidence"] = confidenceValues["adamantine"]
-  result["XirangConfidence"] = confidenceValues["xirang"]
-  result["ThiotimolineConfidence"] = confidenceValues["thiotimoline"]
-  result["NetheriteConfidence"] = confidenceValues["netherite"]
-  
+
+  result["material"] = identifiedMineral;
+  result["chosen_material_confidence"] = confidenceValues[identifiedMineral];
+  result["GaboriumConfidence"] = confidenceValues["gaborium"];
+  result["LathwaiteConfidence"] = confidenceValues["lathwaite"];
+  result["AdamantineConfidence"] = confidenceValues["adamantine"];
+  result["XirangConfidence"] = confidenceValues["xirang"];
+  result["ThiotimolineConfidence"] = confidenceValues["thiotimoline"];
+  result["NetheriteConfidence"] = confidenceValues["netherite"];
+
   //these lines is for testing, remove it
-  result.material = "adamantine" 
-  result.chosen_material_confidence = 0.2
+  result.material = "adamantine";
+  result.chosen_material_confidence = 0.2;
 
   console.log(result);
   return result;
@@ -206,13 +212,13 @@ function processdata(input){
 
 function isJson(str) {
   try {
-      JSON.parse(str);
+    JSON.parse(str);
   } catch (e) {
-      return false;
+    return false;
   }
   return true;
 }
 
-console.log(processdata(JSON.stringify(testValues)))
+console.log(processdata(JSON.stringify(testValues)));
 
-setInterval(requestData,250);
+setInterval(requestData, 250);
