@@ -70,8 +70,15 @@ server.on("message", function (msg, rinfo) {
   }
 
   if (msg.toString().substring(0, 3) == "ZDB") {
+
     roverip = msg.toString().slice(3);
     console.log(`updated rover ip: ${roverip}`);
+
+    //send my ip
+    io.sockets.emit("myip", JSON.stringify(
+      networkInterfaces["Wi-Fi"][0]["address"])
+      .replace(/['"]+/g, ''));
+      
     return;
   }
   // if (mySocket != 0) {
@@ -98,6 +105,9 @@ server.bind(41181);
 var message = new Buffer("ZDB100000");
 
 function requestData() {
+
+  if(roverip == null) return;
+
   server.send(
     message,
     0,
@@ -193,6 +203,7 @@ function processdata(input) {
 
   var result = JSON.parse(JSON.stringify(input));
 
+  result["roverip"] = roverip;
   result["material"] = identifiedMineral;
   result["chosen_material_confidence"] = confidenceValues[identifiedMineral];
   result["GaboriumConfidence"] = confidenceValues["gaborium"];
@@ -222,3 +233,9 @@ function isJson(str) {
 console.log(processdata(JSON.stringify(testValues)));
 
 setInterval(requestData, 250);
+
+var os = require('os');
+
+var networkInterfaces = os.networkInterfaces();
+
+console.log(networkInterfaces);
