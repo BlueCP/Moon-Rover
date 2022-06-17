@@ -273,16 +273,37 @@ double frequencyDetector(byte pin, int lowerThreshold, int upperThreshold, int s
     return freq / i;
 }
 
+int voltToADC(float val){
+    int maxVal;
+    switch(ADC->CTRLB.bit.RESSEL){
+        case 0x0:
+            maxVal = 4095;
+            break;
+        case 0x1:
+            maxVal = 65535;
+            break;
+        case 0x2:
+            maxVal = 1023;
+            break;
+        case 0x3:
+            maxVal = 255;
+            break;
+        default:
+            maxVal = 1023;
+    }
+    return (val / 3.3) * maxVal;
+}
+
 void CaptureSensorData() {
     pixels.setPixelColor(0, pixels.Color(255, 255, 0));
     pixels.show();
     // Radio sensor
     tune_radio(false);                                                    // Tune to 61kHz
-    SensorData["radio61k"] = frequencyDetector(radioPin, 217, 310, 100);  // 100ms will collect 15 samples at 151Hz
+    SensorData["radio61k"] = frequencyDetector(radioPin, voltToADC(0.7), voltToADC(1), 100);  // 100ms will collect 15 samples at 151Hz
     tune_radio(true);                                                     // Tune to 89kHz
-    SensorData["radio89k"] = frequencyDetector(radioPin, 248, 341, 100);
+    SensorData["radio89k"] = frequencyDetector(radioPin, voltToADC(0.7), voltToADC(1.1), 100);
     // IR sensor
-    SensorData["infrared"] = frequencyDetector(irPin, 10, 50, 40);  // 40ms sample time will collect 15 samples at 353Hz
+    SensorData["infrared"] = frequencyDetector(irPin, voltToADC(0.1), voltToADC(1), 40);  // 40ms sample time will collect 15 samples at 353Hz
 }
 
 void SendSensorData() {
