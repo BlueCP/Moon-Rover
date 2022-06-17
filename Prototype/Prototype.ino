@@ -1,13 +1,12 @@
 #include <Adafruit_NeoPixel.h>
 #include <ArduinoJson.h>
-#include "WiFi_Secret.h"
 #include <SPI.h>
 #include <WiFi101.h>
 #include <WiFiUdp.h>
 
 // Wireless variables
-char ssid[] = SECRET_SSID;
-char pass[] = SECRET_PASS;
+char ssid[] = "Nik";
+char pass[] = "xyz55555";
 unsigned int localPort = 2390;
 char packetBuffer[255];
 WiFiUDP Udp;
