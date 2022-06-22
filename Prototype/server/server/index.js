@@ -152,7 +152,7 @@ function processdata(input) {
   // Data analysis
   if (input.magnetic >= 560) { // If magnetic field up
     confidenceValues["adamantine"] = 1;
-  } else if (input.magnetic >= 460) { // If magnetic field down
+  } else if (input.magnetic <= 460) { // If magnetic field down
     confidenceValues["xirang"] = 1;
   } else { // If no magnetic field
     confidenceValues["gaborium"] = confidence_factor(input.radio61k, 151);
@@ -160,13 +160,6 @@ function processdata(input) {
     confidenceValues["thiotimoline"] = confidence_factor(input.infrared, 353);
     confidenceValues["netherite"] = confidence_factor(input.infrared, 571);
   }
-
-  // confidenceValues["gaborium"] = confidence_factor(input.radio61k, 151);
-  // confidenceValues["lathwaite"] = confidence_factor(input.radio61k, 239);
-  // confidenceValues["adamantine"] = confidence_factor(input.radio89k, 151);
-  // confidenceValues["xirang"] = confidence_factor(input.radio89k, 239);
-  // confidenceValues["thiotimoline"] = confidence_factor(input.infrared, 353);
-  // confidenceValues["netherite"] = confidence_factor(input.infrared, 571);
 
   var identifiedMineral = "none";
 
