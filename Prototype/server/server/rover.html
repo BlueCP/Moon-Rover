@@ -34,8 +34,8 @@
         $("#radio61k").html(
           "frequency of demodulated 61k radio signal: " + data.radio61k + "Hz"
         );
-        $("#radio89k").html(
-          "frequency of demodulated 89k radio signal:: " + data.radio89k + "Hz"
+        $("#magnetic").html(
+          "Magnetic signal: " + data.magnetic
         );
         $("#infrared").html(
           "frequency of infrared signal: " + data.infrared + "Hz"
@@ -110,7 +110,7 @@
     <br />
     <div class="d-flex flex-column bg-secondary text-white">
       <h5 class="text-center p-2" id="radio61k">radio61k:</h5>
-      <h5 class="text-center p-2" id="radio89k">radio89k:</h5>
+      <h5 class="text-center p-2" id="magnetic">magnetic:</h5>
       <h5 class="text-center p-2" id="infrared">infrared:</h5>
     </div>
 

@@ -59,7 +59,7 @@ io.sockets.on("connection", function (socket) {
 var dgram = require("dgram");
 var server = dgram.createSocket("udp4");
 
-var roverip;
+var roverip = "192.168.26.108";
 
 server.on("message", function (msg, rinfo) {
   console.log(`server got: ${msg} from ${rinfo.address}:${rinfo.port}`);
@@ -123,7 +123,7 @@ function requestData() {
 
 var testValues = {
   radio61k: 151.53,
-  radio89k: 238.96,
+  magnetic: 238.96,
   infrared: 571.1,
 };
 
@@ -155,6 +155,8 @@ function processdata(input) {
   } else if (input.magnetic <= 533) { // If magnetic field down
     confidenceValues["xirang"] = 1;
   } else { // If no magnetic field
+    confidenceValues["xirang"] = 0;
+    confidenceValues["adamantine"] = 0;
     confidenceValues["gaborium"] = confidence_factor(input.radio61k, 151);
     confidenceValues["lathwaite"] = confidence_factor(input.radio61k, 239);
     confidenceValues["thiotimoline"] = confidence_factor(input.infrared, 353);
@@ -166,7 +168,7 @@ function processdata(input) {
   for (var key in confidenceValues) {
     if (confidenceValues[key] > 0.9) {
       if (identifiedMineral == "none") {
-        identifiedMineral = confidenceValues[key];
+        identifiedMineral = key;
       } else {
         identifiedMineral = "multiple";
         break;
@@ -211,8 +213,8 @@ function processdata(input) {
   result["NetheriteConfidence"] = confidenceValues["netherite"];
 
   //these lines is for testing, remove it
-  result.material = "adamantine";
-  result.chosen_material_confidence = 0.2;
+  // result.material = "adamantine";
+  // result.chosen_material_confidence = 0.2;
 
   console.log(result);
   return result;
