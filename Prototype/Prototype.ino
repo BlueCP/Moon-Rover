@@ -170,13 +170,12 @@ void processPacket(bool sensing) {
         if (len > 0) {
             packetBuffer[len] = 0;
         }
-        Udp.beginPacket(Udp.remoteIP(), Udp.remotePort());
-        Udp.write("ACK");
-        Udp.endPacket();
         if (packetBuffer[0] == 'Z' && packetBuffer[1] == 'D' && packetBuffer[2] == 'B') {
             if (packetBuffer[3] == '1' && !sensing) {
                 CaptureSensorData();
+                delay(50);
                 SendSensorData();
+                delay(100);
             }
             sweeping = packetBuffer[8] == '1';
             F = packetBuffer[4] == '1';
@@ -250,15 +249,18 @@ double frequencyDetector(byte pin, int lowerThreshold, int upperThreshold, int s
     do {
         int sample = analogRead(pin);
         if (sample > upperThreshold && rising) {
-            if (trig) {
-                trig = false;
-            } else {
-                long d = micros() - signalTime + 43.7;  // Delay compensation calculated at 500Hz reference frequency
-                i++;
-                freq += 1.0 / (d)*1000000;
-            }
-            signalTime = micros();
-            rising = false;
+          delay(1);
+          if(sample > upperThreshold && rising) {
+              if (trig) {
+                  trig = false;
+              } else {
+                  long d = micros() - signalTime + 43.7;  // Delay compensation calculated at 500Hz reference frequency
+                  i++;
+                  freq += 1.0 / (d)*1000000;
+              }
+              signalTime = micros();
+              rising = false;
+          }
         }
         if (sample < lowerThreshold && !rising) {
             rising = true;
@@ -294,9 +296,9 @@ void CaptureSensorData() {
     pixels.setPixelColor(0, pixels.Color(255, 255, 0));
     pixels.show();
     // Radio sensor
-    SensorData["radio61k"] = frequencyDetector(radioPin, voltToADC(0.7), voltToADC(1), 100);  // 100ms will collect 15 samples at 151Hz
+    SensorData["radio61k"] = frequencyDetector(radioPin, voltToADC(1.9), voltToADC(3.2), 100);  // 100ms will collect 15 samples at 151Hz
     // IR sensor
-    SensorData["infrared"] = frequencyDetector(irPin, voltToADC(0.1), voltToADC(1), 40);  // 40ms sample time will collect 15 samples at 353Hz
+    SensorData["infrared"] = frequencyDetector(irPin, voltToADC(1), voltToADC(1.5), 40);  // 40ms sample time will collect 15 samples at 353Hz
     // Hall sensor
     SensorData["magnetic"] = analogRead(magneticPin);
 }
