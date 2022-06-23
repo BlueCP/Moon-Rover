@@ -149,20 +149,17 @@ var confidenceValues = {
 function processdata(input) {
   input = JSON.parse(input.toString("utf8"));
 
-  // analysis data here
-  var GaboriumConfidence = Math.abs(input.radio61k - 151) / 151;
-  var LathwaiteConfidence = Math.abs(input.radio61k - 239) / 239;
-  var AdamantineConfidence = Math.abs(input.radio89k - 151) / 151;
-  var XirangConfidence = Math.abs(input.radio89k - 239) / 239;
-  var ThiotimolineConfidence = Math.abs(input.infrared - 353) / 353;
-  var NetheriteConfidence = Math.abs(input.infrared - 571) / 571;
-
-  confidenceValues["gaborium"] = confidence_factor(input.radio61k, 151);
-  confidenceValues["lathwaite"] = confidence_factor(input.radio61k, 239);
-  confidenceValues["adamantine"] = confidence_factor(input.radio89k, 151);
-  confidenceValues["xirang"] = confidence_factor(input.radio89k, 239);
-  confidenceValues["thiotimoline"] = confidence_factor(input.infrared, 353);
-  confidenceValues["netherite"] = confidence_factor(input.infrared, 571);
+  // Data analysis
+  if (input.magnetic >= 540) { // If magnetic field up
+    confidenceValues["adamantine"] = 1;
+  } else if (input.magnetic <= 533) { // If magnetic field down
+    confidenceValues["xirang"] = 1;
+  } else { // If no magnetic field
+    confidenceValues["gaborium"] = confidence_factor(input.radio61k, 151);
+    confidenceValues["lathwaite"] = confidence_factor(input.radio61k, 239);
+    confidenceValues["thiotimoline"] = confidence_factor(input.infrared, 353);
+    confidenceValues["netherite"] = confidence_factor(input.infrared, 571);
+  }
 
   var identifiedMineral = "none";
 

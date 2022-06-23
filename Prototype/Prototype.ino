@@ -14,6 +14,7 @@ WiFiUDP Udp;
 // Signal detection variables
 const byte radioPin = A0;           // Radio sensor output
 const byte irPin = A1;              // IR sensor output
+const byte magneticPin = A2;        // Hall sensor output
 StaticJsonDocument<64> SensorData;  // Sensor data to be transmitted 64 bytes large
 
 // Steering/movement constants
@@ -37,12 +38,6 @@ bool sweeping = false;
 // For debugging
 int pos = 0;
 char inputString[5];
-
-// freq = false: tune to 61kHz. freq = true: tune to 89kHz.
-void tune_radio(bool freq) {
-    digitalWrite(2, freq ? HIGH : LOW);  // Turn switch on/off to adjust capacitance
-    delay(15);                           // Wait for transient effects to subside
-}
 
 int exponential_steering(int current, int target) {
     int difference = abs(current - target);
@@ -134,7 +129,8 @@ void setup() {
     // Sensors
     pinMode(radioPin, INPUT_PULLDOWN);
     pinMode(irPin, INPUT_PULLDOWN);
-    pinMode(2, OUTPUT);  // Controls radio frequency tuning
+    pinMode(magneticPin, INPUT_PULLDOWN);
+    //pinMode(2, OUTPUT);  // Controls radio frequency tuning
     // Motors
     pinMode(9, OUTPUT);  // Left PWM
     pinMode(8, OUTPUT);  // Left DIR
@@ -298,12 +294,11 @@ void CaptureSensorData() {
     pixels.setPixelColor(0, pixels.Color(255, 255, 0));
     pixels.show();
     // Radio sensor
-    tune_radio(false);                                                    // Tune to 61kHz
     SensorData["radio61k"] = frequencyDetector(radioPin, voltToADC(0.7), voltToADC(1), 100);  // 100ms will collect 15 samples at 151Hz
-    tune_radio(true);                                                     // Tune to 89kHz
-    SensorData["radio89k"] = frequencyDetector(radioPin, voltToADC(0.7), voltToADC(1.1), 100);
     // IR sensor
     SensorData["infrared"] = frequencyDetector(irPin, voltToADC(0.1), voltToADC(1), 40);  // 40ms sample time will collect 15 samples at 353Hz
+    // Hall sensor
+    SensorData["magnetic"] = analogRead(magneticPin);
 }
 
 void SendSensorData() {
