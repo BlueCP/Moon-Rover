@@ -150,9 +150,9 @@ function processdata(input) {
   input = JSON.parse(input.toString("utf8"));
 
   // Data analysis
-  if (input.magnetic >= 360) { // If magnetic field up
+  if (input.magnetic >= 540) { // If magnetic field up
     confidenceValues["adamantine"] = 1;
-  } else if (input.magnetic <= 354) { // If magnetic field down
+  } else if (input.magnetic <= 533) { // If magnetic field down
     confidenceValues["xirang"] = 1;
   } else { // If no magnetic field
     confidenceValues["gaborium"] = confidence_factor(input.radio61k, 151);
