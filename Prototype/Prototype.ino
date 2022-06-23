@@ -56,10 +56,8 @@ int exponential_steering(int current, int target) {
 }
 
 void sweep() {
-    float val = SWEEP_WIDTH * cos((2 * PI) / SWEEP_PERIOD * sweepTime);
-    leftWheelVelocity = -val;
-    rightWheelVelocity = val;
-    sweepTime += delta;
+    leftWheelVelocity = 0xff;
+    rightWheelVelocity = 0xff;
 }
 
 // Calculate left wheel velocity
@@ -130,8 +128,8 @@ void setup() {
     pinMode(radioPin, INPUT_PULLDOWN);
     pinMode(irPin, INPUT_PULLDOWN);
     pinMode(magneticPin, INPUT_PULLDOWN);
-    //pinMode(2, OUTPUT);  // Controls radio frequency tuning
-    // Motors
+    // pinMode(2, OUTPUT);  // Controls radio frequency tuning
+    //  Motors
     pinMode(9, OUTPUT);  // Left PWM
     pinMode(8, OUTPUT);  // Left DIR
     pinMode(6, OUTPUT);  // Right PWM
@@ -154,8 +152,8 @@ void setup() {
     }
 }
 
-void broadcastIP(){
-    Udp.beginPacket("255.255.255.255",localPort);
+void broadcastIP() {
+    Udp.beginPacket("255.255.255.255", localPort);
     Udp.write("ZDB");
     IPAddress ip = WiFi.localIP();
     ip.printTo(Udp);
@@ -239,7 +237,7 @@ void printWiFiStatus() {
     Serial.println(" dBm");
 }
 
-double frequencyDetector(byte pin, int lowerThreshold, int upperThreshold, int sampleTime = 50) {
+double frequencyDetector(byte pin, int lowerThreshold, int upperThreshold, int sampleTime = 50, bool radio = false) {
     long t = millis();
     bool rising = false;
     int i = 0;
@@ -249,18 +247,18 @@ double frequencyDetector(byte pin, int lowerThreshold, int upperThreshold, int s
     do {
         int sample = analogRead(pin);
         if (sample > upperThreshold && rising) {
-          delay(1);
-          if(sample > upperThreshold && rising) {
-              if (trig) {
-                  trig = false;
-              } else {
-                  long d = micros() - signalTime + 43.7;  // Delay compensation calculated at 500Hz reference frequency
-                  i++;
-                  freq += 1.0 / (d)*1000000;
-              }
-              signalTime = micros();
-              rising = false;
-          }
+            if (radio) {
+                delay(1); // Skip past initial noise spike with 1ms delay
+            }
+            if (trig) {
+                trig = false;
+            } else {
+                long d = micros() - signalTime + 43.7;  // Delay compensation calculated at 500Hz reference frequency
+                i++;
+                freq += 1.0 / (d)*1000000;
+            }
+            signalTime = micros();
+            rising = false;
         }
         if (sample < lowerThreshold && !rising) {
             rising = true;
@@ -271,9 +269,9 @@ double frequencyDetector(byte pin, int lowerThreshold, int upperThreshold, int s
     return freq / i;
 }
 
-int voltToADC(float val){
+int voltToADC(float val) {
     int maxVal;
-    switch(ADC->CTRLB.bit.RESSEL){
+    switch (ADC->CTRLB.bit.RESSEL) {
         case 0x0:
             maxVal = 4095;
             break;
@@ -296,9 +294,9 @@ void CaptureSensorData() {
     pixels.setPixelColor(0, pixels.Color(255, 255, 0));
     pixels.show();
     // Radio sensor
-    SensorData["radio61k"] = frequencyDetector(radioPin, voltToADC(1.9), voltToADC(3.2), 100);  // 100ms will collect 15 samples at 151Hz
+    SensorData["radio61k"] = frequencyDetector(radioPin, voltToADC(1.8), voltToADC(3.2), 100, true);  // 100ms will collect 15 samples at 151Hz
     // IR sensor
-    SensorData["infrared"] = frequencyDetector(irPin, voltToADC(1), voltToADC(1.5), 40);  // 40ms sample time will collect 15 samples at 353Hz
+    SensorData["infrared"] = frequencyDetector(irPin, 800, 900, 40, false);  // 40ms sample time will collect 15 samples at 353Hz
     // Hall sensor
     SensorData["magnetic"] = analogRead(magneticPin);
 }
