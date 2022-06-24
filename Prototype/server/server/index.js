@@ -51,7 +51,8 @@ function handler(req, res) {
 
 io.sockets.on("connection", function (socket) {
   console.log("Webpage connected"); //Confirmation that the socket has connection to the webpage
-  // mySocket = socket;
+  io.sockets.emit("myip", serverip);
+  //mySocket = socket;
   //io.sockets.emit('field', 'test SUCCESS');
 });
 
@@ -75,9 +76,7 @@ server.on("message", function (msg, rinfo) {
     console.log(`updated rover ip: ${roverip}`);
 
     //send my ip
-    // io.sockets.emit("myip", JSON.stringify(
-    //   networkInterfaces["Wi-Fi"][0]["address"])
-    //   .replace(/['"]+/g, ''));
+    //io.sockets.emit("myip", serverip);
 
     return;
   }
@@ -89,6 +88,7 @@ server.on("message", function (msg, rinfo) {
   // io.sockets.emit('field', msg.toString());
 
   //if (rinfo.address == roverip && isJson(msg.toString())) {
+    if (isJson(msg.toString()))
     io.sockets.emit("field", JSON.stringify(processdata(msg)));
   //}
 
@@ -153,7 +153,7 @@ function processdata(input) {
   var identifiedMineral = "none";
 
   for (var key in confidenceValues) {
-    if (confidenceValues[key] > 0.85) {
+    if (confidenceValues[key] > 0.95) {
       if (identifiedMineral == "none") {
         identifiedMineral = key;
       } else {
@@ -244,4 +244,17 @@ var os = require('os');
 
 var networkInterfaces = os.networkInterfaces();
 
-console.log(networkInterfaces);
+var serverip;
+
+for (var key in networkInterfaces) {
+  if (networkInterfaces.hasOwnProperty(key)) {
+    networkInterfaces[key].forEach(function(element){
+        if(element.address.substring(0,3) == "192") {
+          serverip = element.address
+          console.log(serverip)
+        }
+    })
+  }
+}
+
+//console.log(networkInterfaces);
