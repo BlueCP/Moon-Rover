@@ -75,10 +75,10 @@ server.on("message", function (msg, rinfo) {
     console.log(`updated rover ip: ${roverip}`);
 
     //send my ip
-    io.sockets.emit("myip", JSON.stringify(
-      networkInterfaces["Wi-Fi"][0]["address"])
-      .replace(/['"]+/g, ''));
-      
+    // io.sockets.emit("myip", JSON.stringify(
+    //   networkInterfaces["Wi-Fi"][0]["address"])
+    //   .replace(/['"]+/g, ''));
+
     return;
   }
   // if (mySocket != 0) {
@@ -87,9 +87,11 @@ server.on("message", function (msg, rinfo) {
   // }
 
   // io.sockets.emit('field', msg.toString());
+
   if (rinfo.address == roverip && isJson(msg.toString())) {
     io.sockets.emit("field", JSON.stringify(processdata(msg)));
   }
+
   //io.sockets.emit('field', JSON.stringify(processdata(JSON.stringify(testValues))));
 });
 
@@ -100,35 +102,20 @@ server.on("listening", function () {
   );
 });
 
-server.bind(41181);
+server.bind(2390);
 
 var message = new Buffer("ZDB100000");
 
-function requestData() {
-
-  if(roverip == null) return;
-
-  server.send(
-    message,
-    0,
-    message.length,
-    2390,
-    roverip,
-    function (err, bytes) {
-      if (err) throw err;
-      //console.log('UDP message sent to ' + "192.168.5.108" +':'+ "2390");
-    }
-  );
-}
 
 var testValues = {
   radio61k: 151.53,
   magnetic: 238.96,
   infrared: 571.1,
+  magnetic : 540
 };
 
 function confidence_factor(freq, ideal) {
-  if (freq == ideal) {
+  if (freq > ideal - 5 && freq < ideal + 5) {
     return 1;
   } else if (freq < ideal) {
     return freq / ideal;
@@ -166,7 +153,7 @@ function processdata(input) {
   var identifiedMineral = "none";
 
   for (var key in confidenceValues) {
-    if (confidenceValues[key] > 0.9) {
+    if (confidenceValues[key] > 0.85) {
       if (identifiedMineral == "none") {
         identifiedMineral = key;
       } else {
@@ -231,10 +218,30 @@ function isJson(str) {
 
 console.log(processdata(JSON.stringify(testValues)));
 
-setInterval(requestData, 250);
+//setInterval(requestData, 250);
+
+
+function requestData() {
+
+  if (roverip == null) return;
+
+  server.send(
+    message,
+    0,
+    message.length,
+    2390,
+    roverip,
+    function (err, bytes) {
+      if (err) throw err;
+      //console.log('UDP message sent to ' + "192.168.5.108" +':'+ "2390");
+    }
+  );
+}
+
+
 
 var os = require('os');
 
 var networkInterfaces = os.networkInterfaces();
 
-console.log(networkInterfaces);
+//console.log(networkInterfaces);
