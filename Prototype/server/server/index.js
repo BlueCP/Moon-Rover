@@ -88,9 +88,9 @@ server.on("message", function (msg, rinfo) {
 
   // io.sockets.emit('field', msg.toString());
 
-  if (rinfo.address == roverip && isJson(msg.toString())) {
+  //if (rinfo.address == roverip && isJson(msg.toString())) {
     io.sockets.emit("field", JSON.stringify(processdata(msg)));
-  }
+  //}
 
   //io.sockets.emit('field', JSON.stringify(processdata(JSON.stringify(testValues))));
 });
@@ -244,4 +244,4 @@ var os = require('os');
 
 var networkInterfaces = os.networkInterfaces();
 
-//console.log(networkInterfaces);
+console.log(networkInterfaces);
