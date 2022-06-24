@@ -99,6 +99,13 @@
 		prompt("Copy to clipboard", myips);
 	  }
 
+    var roverip;
+    socket.on("roverip", function(data){
+		  roverip = data;
+      if ($("#status").html() != "Connected to Rover at " + roverip)
+          $("#status").html("Connected to Rover at " + roverip);
+	  })
+
       //socket.emit('message', "testess");
     </script>
 

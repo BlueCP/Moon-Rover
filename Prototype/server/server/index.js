@@ -75,6 +75,10 @@ server.on("message", function (msg, rinfo) {
     roverip = msg.toString().slice(3);
     console.log(`updated rover ip: ${roverip}`);
 
+    //send status and roverip
+    io.sockets.emit("roverip", roverip);
+
+
     //send my ip
     //io.sockets.emit("myip", serverip);
 
@@ -189,7 +193,7 @@ function processdata(input) {
 
   var result = JSON.parse(JSON.stringify(input));
 
-  result["roverip"] = roverip;
+  //result["roverip"] = roverip;
   result["material"] = identifiedMineral;
   result["chosen_material_confidence"] = confidenceValues[identifiedMineral];
   result["GaboriumConfidence"] = confidenceValues["gaborium"];
