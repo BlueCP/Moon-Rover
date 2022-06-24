@@ -36,7 +36,7 @@ bool F, B, L, R = false;
 int leftWheelVelocity = 0;
 int rightWheelVelocity = 0;
 int sweepTime = 0;
-bool sweeping = false;
+bool boosting = false;
 
 // For debugging
 int pos = 0;
@@ -58,7 +58,7 @@ int exponential_steering(int current, int target) {
     return current;
 }
 
-void sweep() {
+void boost() {
     leftWheelVelocity = 0xff;
     rightWheelVelocity = 0xff;
 }
@@ -180,7 +180,7 @@ void processPacket(bool sensing) {
                 SendSensorData();
                 delay(100);
             }
-            sweeping = packetBuffer[8] == '1';
+            boosting = packetBuffer[8] == '1';
             F = packetBuffer[4] == '1';
             B = packetBuffer[5] == '1';
             L = packetBuffer[6] == '1';
@@ -198,7 +198,7 @@ void loop() {
     // Check connection
     if (WiFi.status() != WL_CONNECTED) {
         Serial.println("CONNECTION LOST!!");
-        sweeping = F = B = L = R = false;  // Make sure rover comes to a stop when it loses connection
+        boosting = F = B = L = R = false;  // Make sure rover comes to a stop when it loses connection
         WiFi.end();
         connectToWireless();
     }
@@ -208,8 +208,8 @@ void loop() {
 }
 
 void move() {
-    if (sweeping) {  // Note that sweeping overrides all other inputs
-        sweep();
+    if (boosting) {  // Note that boosting overrides all other inputs
+        boost();
     } else {
         sweepTime = 0;
         left_velocity();
@@ -308,7 +308,7 @@ void CaptureSensorData() {
 
 void SendSensorData() {
     //Udp.beginPacket(Udp.remoteIP(), Udp.remotePort());
-    Udp.beginPacket(samsam, Udp.remotePort());
+    Udp.beginPacket(samsam, 2390);
     serializeJson(SensorData, Udp);
     // serializeJson(SensorData,Serial);
     Udp.endPacket();
